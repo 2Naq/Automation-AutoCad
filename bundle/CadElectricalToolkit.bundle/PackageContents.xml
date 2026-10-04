@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage 
+    SchemaVersion="1.0" 
+    AutodeskProduct="AutoCAD" 
+    ProductType="Application" 
+    Name="CadElectricalToolkit" 
+    AppVersion="1.0.0" 
+    Description="Bo cong cu toi uu ve so do mach dien tren AutoCAD thuong" 
+    Author="Antigravity Dev" 
+    ProductCode="{B3A79C35-5F11-4E7B-9A26-E58309C1284A}" 
+    UpgradeCode="{8E012891-DA6F-4B52-8703-FB7A98687DF1}">
+
+  <CompanyDetails 
+      Name="Electrical Automation Team" 
+      Email="support@autocad-electrical.local" />
+
+  <Components Description="AutoCAD 2021 to 2024 (.NET Framework 4.8)">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R24.0" SeriesMax="R24.3" />
+    <ComponentEntry 
+        AppName="CadElectricalToolkit" 
+        Version="1.0.0" 
+        ModuleName="./Contents/net48/CadElectricalToolkit.dll" 
+        AppDescription="CadElectricalToolkit Plugin" 
+        LoadOnAutoCADStartup="True">
+      <Commands GroupName="CadElectricalToolkitCommands">
+        <!-- Danh sach lenh khoi tao -->
+        <Command Local="ELECINFO" Global="ELECINFO" />
+        <Command Local="TT" Global="TT" />
+        <Command Local="CDN" Global="CDN" />
+        <Command Local="DSTT" Global="DSTT" />
+        <Command Local="GTD" Global="GTD" />
+        <Command Local="GTN" Global="GTN" />
+        <Command Local="INSGEN" Global="INSGEN" />
+        <Command Local="TKGEN" Global="TKGEN" />
+        <Command Local="SYNGEN" Global="SYNGEN" />
+        <Command Local="TKCD" Global="TKCD" />
+        <Command Local="SYNCD" Global="SYNCD" />
+        <Command Local="TKPLCIN" Global="TKPLCIN" />
+        <Command Local="TKPLCOUT" Global="TKPLCOUT" />
+        <Command Local="SYNPLC" Global="SYNPLC" />
+        <Command Local="TCCTB" Global="TCCTB" />
+        <Command Local="TKCRL" Global="TKCRL" />
+        <Command Local="SYNCRL" Global="SYNCRL" />
+        <Command Local="KTCRL" Global="KTCRL" />
+        <Command Local="TKDMBV" Global="TKDMBV" />
+        <Command Local="SYNREV" Global="SYNREV" />
+        <Command Local="SYNTF" Global="SYNTF" />
+        <Command Local="GBV" Global="GBV" />
+        <Command Local="TBV" Global="TBV" />
+        <Command Local="TKDMTB" Global="TKDMTB" />
+        <Command Local="CAD2EXCEL" Global="CAD2EXCEL" />
+      </Commands>
+    </ComponentEntry>
+  </Components>
+
+  <!-- Component danh cho AutoCAD 2025+ (.NET 8) se duoc bo sung khi build target net8.0-windows -->
+</ApplicationPackage>

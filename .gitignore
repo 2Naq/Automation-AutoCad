@@ -1,0 +1,74 @@
+## =========================================================
+## 1. Visual Studio & .NET Build Artifacts
+## =========================================================
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio temporary files, user settings, cache
+.vs/
+*.user
+*.userprefs
+*.suo
+*.sln.docstates
+*.userosscache
+*.ncb
+*.pidb
+*.suo
+*.opensdf
+*.sdf
+*.cache
+*.ipch
+
+# MSBuild & Roslyn
+msbuild.log
+msbuild.err
+msbuild.binlog
+
+## =========================================================
+## 2. AutoCAD Output & Temporary / Lock Files
+## =========================================================
+# File khoa va file sao luu tu dong cua AutoCAD
+*.dwl
+*.dwl2
+*.bak
+*.ac$
+*.sv$
+*.dmp
+*.err
+
+# Compiled plugin assemblies in bundle Contents (rebuilt by MSBuild)
+bundle/**/Contents/**/*.dll
+bundle/**/Contents/**/*.pdb
+
+## =========================================================
+## 3. IDEs & Editors
+## =========================================================
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+## =========================================================
+## 4. OS-specific Files
+## =========================================================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+## =========================================================
+## 5. Temporary and Scratch Files
+## =========================================================
+*.tmp
+*.temp
+scratch/
+/docs/.docs
