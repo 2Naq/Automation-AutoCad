@@ -48,14 +48,19 @@ namespace CadElectricalToolkit.CadAccess
 
         /// <summary>
         /// Xác định cột (A, B, C, ...) của một điểm nằm bên trong khung
-        /// Cột được chia đều theo chiều ngang (X) của khung
+        /// Cột được chia đều theo chiều ngang (X) trong vùng lưới vẽ (loại trừ lề trái/phải nếu có)
         /// </summary>
         public string GetColumnLetter(double x, int totalColumns, string[] columnLetters)
         {
             if (Width <= 0 || totalColumns <= 0) return "?";
 
-            double relativeX = x - MinPoint.X;
-            double colWidth = Width / totalColumns;
+            double leftOffset = Width * Core.ElectricalConfig.FrameLeftMarginRatio;
+            double rightOffset = Width * Core.ElectricalConfig.FrameRightMarginRatio;
+            double gridWidth = Width - leftOffset - rightOffset;
+            if (gridWidth <= 0) gridWidth = Width;
+
+            double relativeX = x - (MinPoint.X + leftOffset);
+            double colWidth = gridWidth / totalColumns;
             int colIndex = (int)(relativeX / colWidth);
 
             colIndex = Math.Max(0, Math.Min(colIndex, totalColumns - 1));
@@ -65,23 +70,31 @@ namespace CadElectricalToolkit.CadAccess
 
         /// <summary>
         /// Xác định hàng (1, 2, 3, ...) của một điểm nằm bên trong khung
-        /// Hàng 1 ở trên cùng, hàng tăng dần xuống dưới (Y giảm dần)
+        /// Hàng 1 ở trên cùng, hàng tăng dần xuống dưới (Y giảm dần).
+        /// Vùng lưới các hàng 1-6 nằm ở phía trên phần khung tên (Bottom Margin / Title Block).
         /// </summary>
         public int GetRowNumber(double y, int totalRows)
         {
             if (Height <= 0 || totalRows <= 0) return 1;
 
-            double relativeY = MaxPoint.Y - y;  // Y giảm dần = hàng tăng dần
-            double rowHeight = Height / totalRows;
+            double topOffset = Height * Core.ElectricalConfig.FrameTopMarginRatio;
+            double bottomOffset = Height * Core.ElectricalConfig.FrameBottomMarginRatio;
+            double gridHeight = Height - topOffset - bottomOffset;
+            if (gridHeight <= 0) gridHeight = Height;
+
+            double gridTopY = MaxPoint.Y - topOffset;
+            double relativeY = gridTopY - y;  // Y giảm dần = hàng tăng dần từ 1..totalRows
+            double rowHeight = gridHeight / totalRows;
+
             int rowIndex = (int)(relativeY / rowHeight);
 
             rowIndex = Math.Max(0, Math.Min(rowIndex, totalRows - 1));
 
-            return rowIndex + 1; // 1-based
+            return rowIndex + 1; // 1-based (1..totalRows)
         }
 
         /// <summary>
-        /// Xác định địa chỉ "Trang-HàngCột" (ví dụ: "2-6B") cho một điểm trong khung
+        /// Xác định địa chỉ "Trang-HàngCột" (ví dụ: "01-4A") cho một điểm trong khung
         /// </summary>
         public string GetAddress(Point3d point, int totalRows, int totalColumns, string[] columnLetters)
         {
@@ -91,12 +104,12 @@ namespace CadElectricalToolkit.CadAccess
         }
 
         /// <summary>
-        /// Kiểm tra xem một điểm có nằm bên trong khung tên này không
+        /// Kiểm tra xem một điểm có nằm bên trong khung tên này không (có dung sai biên)
         /// </summary>
-        public bool ContainsPoint(Point3d point)
+        public bool ContainsPoint(Point3d point, double tolerance = 15.0)
         {
-            return point.X >= MinPoint.X && point.X <= MaxPoint.X &&
-                   point.Y >= MinPoint.Y && point.Y <= MaxPoint.Y;
+            return point.X >= (MinPoint.X - tolerance) && point.X <= (MaxPoint.X + tolerance) &&
+                   point.Y >= (MinPoint.Y - tolerance) && point.Y <= (MaxPoint.Y + tolerance);
         }
     }
 
@@ -105,6 +118,17 @@ namespace CadElectricalToolkit.CadAccess
     /// </summary>
     public static class SheetFrameHelper
     {
+        public static readonly string[] DefaultTitleBlockNames = new[]
+        {
+            Core.ElectricalConfig.BlockTitle, "Frame-a4", "Frame-a3", "Frame-a2", "Frame-a1",
+            "KHUNG_TEN", "KHUNGTEN", "TITLE_BLOCK", "TITLEBLOCK", "KHUNG BAN VE", "KHUNG A4", "KHUNG A3", "KHUNG A2", "KHUNG A1"
+        };
+
+        public static readonly string[] DefaultSheetNoTags = new[]
+        {
+            Core.ElectricalConfig.TagSheetNumber, "A00", "TSHEET", "SHEET_NO", "SHEET", "PAGE", "SHT", "NO", "DWG_NO", "SO_TRANG", "TRANG"
+        };
+
         /// <summary>
         /// Quét toàn bộ ModelSpace, tìm tất cả block khung tên và trả về danh sách SheetFrame
         /// </summary>
@@ -131,18 +155,14 @@ namespace CadElectricalToolkit.CadAccess
                     string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
                     if (string.IsNullOrWhiteSpace(sheetNo)) continue;
 
-                    try
+                    if (TryGetExtents(blkRef, out Extents3d ext))
                     {
                         frames.Add(new SheetFrame
                         {
                             SheetNo = sheetNo!.Trim(),
                             BlockId = blkRef.ObjectId,
-                            Extents = blkRef.GeometricExtents
+                            Extents = ext
                         });
-                    }
-                    catch
-                    {
-                        // GeometricExtents co the throw neu block khong co hinh hoc
                     }
                 }
             }
@@ -167,16 +187,15 @@ namespace CadElectricalToolkit.CadAccess
                     string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
                     if (string.IsNullOrWhiteSpace(sheetNo)) continue;
 
-                    try
+                    if (TryGetExtents(blkRef, out Extents3d ext))
                     {
                         frames.Add(new SheetFrame
                         {
                             SheetNo = sheetNo!.Trim(),
                             BlockId = blkRef.ObjectId,
-                            Extents = blkRef.GeometricExtents
+                            Extents = ext
                         });
                     }
-                    catch { }
                 }
             }
 
@@ -184,11 +203,93 @@ namespace CadElectricalToolkit.CadAccess
         }
 
         /// <summary>
-        /// Tìm khung tên chứa một điểm cụ thể (để xác định trang)
+        /// Tìm khung tên chứa một điểm cụ thể (để xác định trang).
+        /// Nếu bản vẽ chỉ có 1 khung tên duy nhất, tự động trả về khung tên đó.
+        /// Nếu có nhiều khung tên, ưu tiên khung bao chứa điểm hoặc khung tên gần nhất.
         /// </summary>
         public static SheetFrame? FindFrameContaining(List<SheetFrame> frames, Point3d point)
         {
-            return frames.FirstOrDefault(f => f.ContainsPoint(point));
+            if (frames == null || frames.Count == 0) return null;
+            if (frames.Count == 1) return frames[0];
+
+            var exact = frames.FirstOrDefault(f => f.ContainsPoint(point));
+            if (exact != null) return exact;
+
+            // Fallback: Tìm khung có tâm gần điểm nhất
+            return frames.OrderBy(f =>
+            {
+                double midX = (f.MinPoint.X + f.MaxPoint.X) / 2.0;
+                double midY = (f.MinPoint.Y + f.MaxPoint.Y) / 2.0;
+                double dx = point.X - midX;
+                double dy = point.Y - midY;
+                return dx * dx + dy * dy;
+            }).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Tự động quét toàn bộ khung tên trên bản vẽ (nhận diện Frame-a4, Frame-a3 hoặc các block có tag A00/SHEET_NO)
+        /// </summary>
+        public static List<SheetFrame> ScanAllFramesAuto(Database db, Transaction tr)
+        {
+            var titleBlockNames = DefaultTitleBlockNames;
+            var sheetNoTags = DefaultSheetNoTags;
+
+            var frames = new List<SheetFrame>();
+            var blockIds = SelectionHelper.GetAllEntitiesOfType<BlockReference>(db, tr);
+
+            foreach (var id in blockIds)
+            {
+                if (tr.GetObject(id, OpenMode.ForRead) is BlockReference blkRef)
+                {
+                    string blkName = blkRef.GetEffectiveBlockName(tr);
+                    bool nameMatches = titleBlockNames.Any(n => string.Equals(blkName, n, StringComparison.OrdinalIgnoreCase));
+                    string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
+
+                    if ((nameMatches || !string.IsNullOrWhiteSpace(sheetNo)) && !string.IsNullOrWhiteSpace(sheetNo))
+                    {
+                        if (TryGetExtents(blkRef, out Extents3d ext))
+                        {
+                            if (Math.Abs(ext.MaxPoint.X - ext.MinPoint.X) > 20 && Math.Abs(ext.MaxPoint.Y - ext.MinPoint.Y) > 20)
+                            {
+                                frames.Add(new SheetFrame
+                                {
+                                    SheetNo = sheetNo!.Trim(),
+                                    BlockId = blkRef.ObjectId,
+                                    Extents = ext
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            return frames.OrderBy(f => int.TryParse(f.SheetNo, out int n) ? n : 9999).ToList();
+        }
+
+        /// <summary>
+        /// Lấy vùng bao GeometricExtents một cách an toàn, có fallback sang Bounds nếu lỗi
+        /// </summary>
+        public static bool TryGetExtents(BlockReference blkRef, out Extents3d ext)
+        {
+            ext = default;
+            try
+            {
+                ext = blkRef.GeometricExtents;
+                return true;
+            }
+            catch
+            {
+                try
+                {
+                    if (blkRef.Bounds.HasValue)
+                    {
+                        ext = blkRef.Bounds.Value;
+                        return true;
+                    }
+                }
+                catch { }
+            }
+            return false;
         }
     }
 }

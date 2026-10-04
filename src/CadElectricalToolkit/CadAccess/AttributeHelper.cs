@@ -75,12 +75,46 @@ namespace CadElectricalToolkit.CadAccess
 
             foreach (ObjectId attId in blkRef.AttributeCollection)
             {
-                if (tr.GetObject(attId, OpenMode.ForWrite) is AttributeReference attRef)
+                var obj = tr.GetObject(attId, OpenMode.ForRead);
+                if (obj is AttributeReference attRef)
                 {
                     if (string.Equals(attRef.Tag, tag, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (!attRef.IsWriteEnabled)
+                        {
+                            attRef.UpgradeOpen();
+                        }
                         attRef.TextString = newValue;
                         return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Gán giá trị mới cho một Tag từ danh sách các tên Tag dự phòng (gán vào Tag đầu tiên tìm thấy)
+        /// </summary>
+        public static bool SetAttributeValue(this BlockReference blkRef, Transaction tr, string newValue, params string[] candidateTags)
+        {
+            if (blkRef == null || tr == null || candidateTags == null || candidateTags.Length == 0) return false;
+
+            foreach (ObjectId attId in blkRef.AttributeCollection)
+            {
+                var obj = tr.GetObject(attId, OpenMode.ForRead);
+                if (obj is AttributeReference attRef)
+                {
+                    foreach (var tag in candidateTags)
+                    {
+                        if (string.Equals(attRef.Tag, tag, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!attRef.IsWriteEnabled)
+                            {
+                                attRef.UpgradeOpen();
+                            }
+                            attRef.TextString = newValue;
+                            return true;
+                        }
                     }
                 }
             }
