@@ -48,6 +48,25 @@ namespace CadElectricalToolkit.CadAccess
         }
 
         /// <summary>
+        /// Lấy giá trị của một Tag từ danh sách các tên Tag dự phòng (không phân biệt hoa thường)
+        /// Ví dụ: blk.GetAttributeValue(tr, "NAME", "TAG", "TAGNAME")
+        /// </summary>
+        public static string? GetAttributeValue(this BlockReference blkRef, Transaction tr, params string[] candidateTags)
+        {
+            if (blkRef == null || tr == null || candidateTags == null || candidateTags.Length == 0) return null;
+
+            var attrs = blkRef.GetAttributes(tr);
+            foreach (var tag in candidateTags)
+            {
+                if (attrs.TryGetValue(tag, out var val) && !string.IsNullOrWhiteSpace(val))
+                {
+                    return val;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Gán giá trị mới cho một Tag trong BlockReference
         /// </summary>
         public static bool SetAttributeValue(this BlockReference blkRef, string tag, string newValue, Transaction tr)

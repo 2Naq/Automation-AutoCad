@@ -17,7 +17,7 @@ namespace CadElectricalToolkit.UI.Views
 
         private void InitializeComponent()
         {
-            Text = "THÔNG TIN TOOL";
+            Text = "THÔNG TIN TOOLs";
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;

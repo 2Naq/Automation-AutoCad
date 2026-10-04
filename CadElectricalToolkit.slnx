@@ -1,5 +1,11 @@
 <Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
   <Folder Name="/src/">
-    <Project Path="src/CadElectricalToolkit/CadElectricalToolkit.csproj" />
+    <Project Path="src/CadElectricalToolkit/CadElectricalToolkit.csproj">
+      <BuildType Project="Debug" />
+      <Platform Project="x64" />
+    </Project>
   </Folder>
 </Solution>

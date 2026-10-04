@@ -33,7 +33,7 @@
     <ItemGroup>
       <OutputDlls Include="$(TargetDir)*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(OutputDlls)" DestinationFolder="$(SolutionDir)bundle\CadElectricalToolkit.bundle\Contents\$(TargetFramework)\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(OutputDlls)" DestinationFolder="$(MSBuildThisFileDirectory)..\..\bundle\CadElectricalToolkit.bundle\Contents\$(TargetFramework)\" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
