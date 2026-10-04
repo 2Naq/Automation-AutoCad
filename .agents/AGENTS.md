@@ -29,6 +29,8 @@ Industrial electrical designers often use standard AutoCAD for panel drafting an
    - Bill of Materials (`TKDMTB`) and CAD-to-Excel export (`CAD2EXCEL`).
 7. **Drafting Acceleration:**
    - Quick dimension summation (`CDN`), fast sequential text numbering (`DSTT`), text alignment (`GTD`, `GTN`).
+8. **Link Tracing & Navigation (Truy vết liên kết trang):**
+   - Click on Arrow-To/From block or Relay contact/coil to find destination page and draw visual guide line directly to the target `Frame-a4` title block (`TIMTRANG`, `TRACE`, `XOALINK`).
 
 ---
 
@@ -67,6 +69,7 @@ C_AutoCad/
         │   └── TableHelper.cs               # AutoCAD Native Table generator
         ├── Commands/                        # AutoCAD [CommandMethod] Entry Points
         │   ├── CrossRefCommands.cs          # TCCTB, TKCRL, SYNCRL, KTCRL, DSTTKBT
+        │   ├── TraceCommands.cs             # TIMTRANG, TRACELINK, TRACE, XOALINK (Vẽ line chỉ dẫn truy vết trang)
         │   ├── WireNumberCommands.cs        # INSGEN, TKGEN, SYNGEN
         │   ├── TerminalCommands.cs          # TKCD, SYNCD
         │   ├── PlcCommands.cs               # TKPLCIN, TKPLCOUT, SYNPLC

@@ -267,23 +267,31 @@ namespace CadElectricalToolkit.CadAccess
         }
 
         /// <summary>
-        /// Lấy vùng bao GeometricExtents một cách an toàn, có fallback sang Bounds nếu lỗi
+        /// Lấy vùng bao GeometricExtents một cách an toàn cho BlockReference, có fallback sang Bounds nếu lỗi
         /// </summary>
         public static bool TryGetExtents(BlockReference blkRef, out Extents3d ext)
+        {
+            return TryGetExtents((Entity)blkRef, out ext);
+        }
+
+        /// <summary>
+        /// Lấy vùng bao GeometricExtents một cách an toàn cho bất kỳ Entity nào, có fallback sang Bounds nếu lỗi
+        /// </summary>
+        public static bool TryGetExtents(Entity ent, out Extents3d ext)
         {
             ext = default;
             try
             {
-                ext = blkRef.GeometricExtents;
+                ext = ent.GeometricExtents;
                 return true;
             }
             catch
             {
                 try
                 {
-                    if (blkRef.Bounds.HasValue)
+                    if (ent.Bounds.HasValue)
                     {
-                        ext = blkRef.Bounds.Value;
+                        ext = ent.Bounds.Value;
                         return true;
                     }
                 }

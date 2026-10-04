@@ -58,6 +58,8 @@ namespace CadElectricalToolkit.UI.Views
                     "- TKGEN : Thống kê gen số.",
                     "- INSGEN : Tạo gen số thống kê.",
                     "- TCCTB : Đánh lại địa chỉ cuộn coil cho tiếp điểm (hàng loạt / tự động).",
+                    "- TIMTRANG : Tìm trang của cuộn coil/mũi tên & vẽ line chỉ dẫn về khung tên.",
+                    "- XOALINK : Xóa nhanh toàn bộ các đường chỉ dẫn truy vết trang.",
                     "- SYNPLC : Đồng bộ địa chỉ DI/DO-PLC.",
                     "- SYNREV : Cập nhật số lần thay đổi của trang bản vẽ.",
                     "- SYNCRL : Đồng bộ địa chỉ chân số thiết bị & cuộn coil 2 chiều.",
