@@ -1,8 +1,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Autodesk.AutoCAD.ApplicationServices;
-
 namespace CadElectricalToolkit.UI.Views
 {
     /// <summary>

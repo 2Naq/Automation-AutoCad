@@ -71,4 +71,6 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 scratch/
+dist/
+*.zip
 /docs/.docs

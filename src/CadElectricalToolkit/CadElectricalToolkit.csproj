@@ -13,8 +13,8 @@
     <AutoCadPath Condition="'$(AutoCadPath)' == ''">C:\Program Files\Autodesk\AutoCAD 2021</AutoCadPath>
   </PropertyGroup>
 
-  <!-- AutoCAD .NET Assemblies (CopyLocal = False is required for AutoCAD plugins) -->
-  <ItemGroup>
+  <!-- AutoCAD .NET Assemblies (Use local installation if present, fallback to official NuGet package) -->
+  <ItemGroup Condition="Exists('$(AutoCadPath)\accoremgd.dll')">
     <Reference Include="AcCoreMgd">
       <HintPath>$(AutoCadPath)\accoremgd.dll</HintPath>
       <Private>False</Private>
@@ -27,6 +27,10 @@
       <HintPath>$(AutoCadPath)\acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(AutoCadPath)\accoremgd.dll')">
+    <PackageReference Include="AutoCAD.NET" Version="24.0.0" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <Target Name="CopyToBundle" AfterTargets="Build">

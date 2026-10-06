@@ -124,7 +124,7 @@ namespace CadElectricalToolkit.UI.Views
             MaximizeBox = false;
             MinimizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
-            ClientSize = new Size(430, 500);
+            ClientSize = new Size(480, 500);
             BackColor = Color.FromArgb(240, 240, 240);
             Font = new Font("Segoe UI", 9F);
 
@@ -132,7 +132,7 @@ namespace CadElectricalToolkit.UI.Views
             tabControl = new TabControl
             {
                 Location = new Point(10, 10),
-                Size = new Size(410, 360),
+                Size = new Size(460, 480),
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold)
             };
 
