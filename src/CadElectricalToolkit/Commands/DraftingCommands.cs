@@ -7,6 +7,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CadElectricalToolkit.CadAccess;
+using CadElectricalToolkit.UI;
+using CadElectricalToolkit.UI.Views;
 
 namespace CadElectricalToolkit.Commands
 {
@@ -63,91 +65,13 @@ namespace CadElectricalToolkit.Commands
         }
 
         /// <summary>
-        /// DSTT : Đánh số thứ tự tăng dần tự động khi click vào Text / MText / Block Attribute
+        /// DSTT : Đánh số thứ tự tăng dần tự động (Giao diện WPF hỗ trợ Block Attribute & Text)
         /// </summary>
         [CommandMethod("DSTT")]
         public void AutoNumbering()
         {
-            var ed = CadDatabaseHelper.ActiveEd;
-
-            // Nhap tien to
-            var psoPrefix = new PromptStringOptions("\nNhap tien to (Prefix) [Enter neu khong co]: ")
-            {
-                AllowSpaces = true
-            };
-            var pprPrefix = ed.GetString(psoPrefix);
-            if (pprPrefix.Status != PromptStatus.OK) return;
-            string prefix = pprPrefix.StringResult ?? string.Empty;
-
-            // Nhap so bat dau
-            var pioStart = new PromptIntegerOptions("\nNhap so bat dau <1>: ")
-            {
-                DefaultValue = 1,
-                UseDefaultValue = true
-            };
-            var pirStart = ed.GetInteger(pioStart);
-            if (pirStart.Status != PromptStatus.OK) return;
-            int currentNum = pirStart.Value;
-
-            // Nhap buoc nhay
-            var pioStep = new PromptIntegerOptions("\nNhap buoc nhay <1>: ")
-            {
-                DefaultValue = 1,
-                UseDefaultValue = true
-            };
-            var pirStep = ed.GetInteger(pioStep);
-            if (pirStep.Status != PromptStatus.OK) return;
-            int step = pirStep.Value;
-
-            ed.WriteMessage($"\nBat dau danh so tu: {prefix}{currentNum}, buoc nhay {step}. Click chon Text/MText/Block de danh so (ESC de dung):");
-
-            while (true)
-            {
-                var peo = new PromptEntityOptions($"\nChon Text/Block de gan gia tri '{prefix}{currentNum}': ");
-                var per = ed.GetEntity(peo);
-                if (per.Status != PromptStatus.OK) break;
-
-                bool updated = false;
-                CadDatabaseHelper.RunTransaction((tr, db) =>
-                {
-                    var ent = tr.GetObject(per.ObjectId, OpenMode.ForWrite);
-                    string targetValue = $"{prefix}{currentNum}";
-
-                    if (ent is DBText dbText)
-                    {
-                        dbText.TextString = targetValue;
-                        updated = true;
-                    }
-                    else if (ent is MText mText)
-                    {
-                        mText.Contents = targetValue;
-                        updated = true;
-                    }
-                    else if (ent is BlockReference blkRef)
-                    {
-                        // Neu la block, tim attribute dau tien hoac attribute co tag TT/NO
-                        foreach (ObjectId attId in blkRef.AttributeCollection)
-                        {
-                            if (tr.GetObject(attId, OpenMode.ForWrite) is AttributeReference attRef)
-                            {
-                                attRef.TextString = targetValue;
-                                updated = true;
-                                break;
-                            }
-                        }
-                    }
-                });
-
-                if (updated)
-                {
-                    ed.WriteMessage($" -> Da gan: {prefix}{currentNum}");
-                    currentNum += step;
-                }
-                else
-                {
-                    ed.WriteMessage("\nDoi tuong chon khong phai la Text, MText hoac Block co Attribute.");
-                }
-            }
+            var window = new AutoNumberingWindow(openBlockAttrTab: true);
+            window.ShowModal();
         }
 
         /// <summary>

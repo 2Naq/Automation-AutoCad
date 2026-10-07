@@ -1,6 +1,6 @@
 using Autodesk.AutoCAD.Runtime;
+using CadElectricalToolkit.UI;
 using CadElectricalToolkit.UI.Views;
-using cadApp = Autodesk.AutoCAD.ApplicationServices.Application;
 
 namespace CadElectricalToolkit.Commands
 {
@@ -10,10 +10,8 @@ namespace CadElectricalToolkit.Commands
         [CommandMethod("TT")]
         public void ShowToolInfo()
         {
-            using (var form = new ToolInfoForm())
-            {
-                cadApp.ShowModalDialog(form);
-            }
+            var window = new ToolInfoWindow();
+            window.ShowModal();
         }
 
         [CommandMethod("TAOBLOCKMAU")]

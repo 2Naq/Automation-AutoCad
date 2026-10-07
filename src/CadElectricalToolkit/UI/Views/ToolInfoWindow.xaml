@@ -1,0 +1,225 @@
+<Window x:Class="CadElectricalToolkit.UI.Views.ToolInfoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="THÔNG TIN TOOLs - CAD ELECTRICAL TOOLKIT" 
+        Height="680" Width="560"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResizeWithGrip"
+        Background="#F8FAFC"
+        FontFamily="Segoe UI"
+        UseLayoutRounding="True">
+
+    <Window.Resources>
+        <!-- Modern Card Style -->
+        <Style x:Key="CommandCard" TargetType="Border">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Command Pill Badge -->
+        <Style x:Key="CommandBadge" TargetType="Border">
+            <Setter Property="Background" Value="#E0F2FE"/>
+            <Setter Property="BorderBrush" Value="#BAE6FD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+
+        <!-- Category Tag -->
+        <Style x:Key="CategoryTag" TargetType="Border">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <!-- Modern Mini Button -->
+        <Style x:Key="MiniButton" TargetType="Button">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E2E8F0"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#CBD5E1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Run Command Button -->
+        <Style x:Key="RunButton" TargetType="Button" BasedOn="{StaticResource MiniButton}">
+            <Setter Property="Background" Value="#0284C7"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#0369A1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filter Chip Button -->
+        <Style x:Key="ChipButton" TargetType="RadioButton">
+            <Setter Property="GroupName" Value="FilterCategory"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="10,4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0284C7"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#0284C7"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#94A3B8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#0F172A" Padding="18,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Background="#0284C7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                    <TextBlock Text="⚡" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="CadElectricalToolkit" Foreground="White" FontWeight="Bold" FontSize="15"/>
+                    <TextBlock Text="Bộ công cụ tự động hóa bản vẽ mạch điện trong AutoCAD" Foreground="#94A3B8" FontSize="11"/>
+                </StackPanel>
+                <Border Grid.Column="2" Background="#1E293B" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                    <TextBlock Text="v2.0 WPF" Foreground="#38BDF8" FontWeight="Bold" FontSize="11"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Search & Filter Bar -->
+        <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="14,10">
+            <StackPanel>
+                <!-- Search Box -->
+                <Grid Margin="0,0,0,8">
+                    <TextBox x:Name="TxtSearch" Height="32" Padding="28,4,8,4" FontSize="12" 
+                             BorderBrush="#CBD5E1" BorderThickness="1"
+                             TextChanged="TxtSearch_TextChanged"/>
+                    <TextBlock Text="🔍" Foreground="#94A3B8" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False"/>
+                    <TextBlock x:Name="TxtSearchPlaceholder" Text="Tìm kiếm nhanh tên lệnh hoặc chức năng..." 
+                               Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" Margin="30,0,0,0" 
+                               IsHitTestVisible="False"/>
+                </Grid>
+
+                <!-- Filter Chips -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RbFilterAll" Content="Tất cả (25)" Style="{StaticResource ChipButton}" IsChecked="True" Checked="Filter_Checked"/>
+                        <RadioButton x:Name="RbFilterDrafting" Content="Đánh số &amp; Soạn thảo" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
+                        <RadioButton x:Name="RbFilterCrossRef" Content="Relay &amp; Khung 14 chân" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
+                        <RadioButton x:Name="RbFilterSheet" Content="Khung tên &amp; Trang" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
+                        <RadioButton x:Name="RbFilterWire" Content="Dây &amp; Cầu đấu" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
+                        <RadioButton x:Name="RbFilterPlc" Content="PLC I/O" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
+        <!-- Command List -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="14,10">
+            <ItemsControl x:Name="ItemsCommands">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CommandCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Command Pill -->
+                                <Border Style="{StaticResource CommandBadge}" VerticalAlignment="Center" MinWidth="85">
+                                    <TextBlock Text="{Binding Code}" FontWeight="Bold" FontSize="12" Foreground="#0369A1" HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Details -->
+                                <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12" Foreground="#0F172A"/>
+                                    <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    <Border Style="{StaticResource CategoryTag}" HorizontalAlignment="Left" Margin="0,4,0,0">
+                                        <TextBlock Text="{Binding Category}" FontSize="9.5" Foreground="#64748B" FontWeight="SemiBold"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Chạy" Style="{StaticResource RunButton}" Tag="{Binding Code}" Click="BtnRun_Click" Margin="0,0,4,0"/>
+                                    <Button Content="Copy" Style="{StaticResource MiniButton}" Tag="{Binding Code}" Click="BtnCopy_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="3" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,10">
+            <DockPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="CadElectricalToolkit - C# .NET 4.8 / AutoCAD 2021+" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
+                    <TextBlock Text="Phát triển tự động hóa điện công nghiệp" FontSize="10" Foreground="#94A3B8"/>
+                </StackPanel>
+                <Button Content="Đóng" Width="75" Height="28" HorizontalAlignment="Right" Style="{StaticResource MiniButton}" Click="BtnClose_Click"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

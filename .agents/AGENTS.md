@@ -78,9 +78,10 @@ C_AutoCad/
         │   ├── DraftingCommands.cs          # CDN, DSTT, GTD, GTN
         │   └── AboutCommands.cs             # ELECINFO, TT, TAOBLOCKMAU, SAMPLEBLOCKS
         └── UI/
-            └── Views/                       # WinForms Modal Dialogs
-                ├── ToolInfoForm.cs          # Commands cheatsheet UI
-                └── SheetNumberingForm.cs    # Sheet numbering configuration dialog
+            ├── CadWindowHelper.cs           # WPF Window modal dialog & AutoCAD handle integration
+            └── Views/                       # Modern WPF Windows (XAML & Code-behind)
+                ├── ToolInfoWindow.xaml      # Commands cheatsheet & quick run UI (WPF)
+                └── AutoNumberingWindow.xaml # Auto numbering dialog for Frames & Block attributes (WPF)
 ```
 
 ---
@@ -203,10 +204,10 @@ sequenceDiagram
 - **Direction 1 (Coil $\rightarrow$ Contacts):** Resolves coil position $\rightarrow$ Writes to `ADDRESS_COIL` on contacts.
 - **Direction 2 (Contacts $\rightarrow$ Relay Frame):** Resolves each contact's grid position $\rightarrow$ Writes to `ADDRESS_1..4` on `KHUNG 14 CHAN`.
 
-### 5.4. Sheet Numbering with UI (`DSTTKBT`)
-- Opens WinForms [`SheetNumberingForm`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/SheetNumberingForm.cs).
-- User sets start number, prefix, suffix, style (1, 01, A, 001), sorting direction (Top-to-Bottom, Left-to-Right, or selection order), and page mode (`Current/Total`).
-- Sorts selected title blocks and safely writes to `A00` and `TSHEET` tags.
+### 5.4. Sheet & Block Attribute Numbering with WPF UI (`DSTTKBT` & `DSTT`)
+- Opens WPF [`AutoNumberingWindow`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml).
+- **Tab 1: STT khung tên:** Sets start number, prefix, suffix, style (1, 01, A, 001), sorting direction, and page mode (`Current/Total`, e.g., `01 /24`).
+- **Tab 2: STT block attribute:** Sets prefix (e.g. `DI.`), suffix, start number, step, target block name (e.g. `ten_chan_domino`), attribute TAG (e.g. `TEN_CHAN`), interactive CAD tag picker (`Chọn TAG`), and batch numbering or click-by-click numbering directly on CAD.
 
 ---
 

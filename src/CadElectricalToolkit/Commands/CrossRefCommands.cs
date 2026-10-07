@@ -9,6 +9,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CadElectricalToolkit.CadAccess;
 using CadElectricalToolkit.Core;
+using CadElectricalToolkit.UI;
 using CadElectricalToolkit.UI.Views;
 
 namespace CadElectricalToolkit.Commands
@@ -889,185 +890,13 @@ namespace CadElectricalToolkit.Commands
         }
 
         /// <summary>
-        /// DSTTKBT : Đánh số thứ tự khung tên bản vẽ (với UI cài đặt)
-        ///
-        /// QUY TRÌNH:
-        ///  1. Hiện form cài đặt (Prefix, Suffix, From, kiểu đánh số, hướng, chế độ trang)
-        ///  2. Người dùng nhấn "Chọn blocks" hoặc OK
-        ///  3. Quét chọn các block khung tên trên bản vẽ
-        ///  4. Sắp xếp theo hướng đã chọn
-        ///  5. Gán giá trị số trang theo quy tắc đã cài đặt
-        ///  6. Nếu chế độ trang: ghi dạng "12/24" (trang hiện tại / tổng trang)
+        /// DSTTKBT : Đánh số thứ tự khung tên bản vẽ (Giao diện WPF hỗ trợ trang/tổng trang)
         /// </summary>
         [CommandMethod("DSTTKBT")]
         public void SheetNumberingWithUI()
         {
-            var ed = CadDatabaseHelper.ActiveEd;
-            ed.WriteMessage("\n--- DANH SO THU TU KHUNG TEN BAN VE (DSTTKBT) ---");
-
-            // 1. Hien thi form cai dat
-            SheetNumberingForm? form = null;
-            bool usePageMode = false;
-            int totalPages = 24;
-            string prefix = "";
-            string suffix = "";
-            int startNum = 1;
-            bool twoDigits = true;
-            int styleIndex = 0;
-            int dirIndex = 0;
-            string targetBlockName = "";
-            string targetAttrTag = "";
-
-            Autodesk.AutoCAD.ApplicationServices.Application.ShowModalDialog(
-                Autodesk.AutoCAD.ApplicationServices.Application.MainWindow.Handle,
-                form = new SheetNumberingForm()
-            );
-
-            if (form.DialogResult != DialogResult.OK)
-            {
-                ed.WriteMessage("\nDa huy lenh danh so thu tu.");
-                return;
-            }
-
-            prefix = form.NumberPrefix;
-            suffix = form.NumberSuffix;
-            startNum = form.StartNumber;
-            twoDigits = form.UseTwoDigits;
-            styleIndex = form.NumberStyleIndex;
-            dirIndex = form.DirectionIndex;
-            targetBlockName = form.TargetBlockName;
-            targetAttrTag = form.TargetAttrTag;
-            usePageMode = form.UsePageMode;
-            bool autoTotal = form.AutoTotalPages;
-            totalPages = form.TotalPages;
-            string totalPagesTag = form.TotalPagesAttrTag;
-            string totalPrefix = form.TotalPagesPrefix;
-
-            if (string.IsNullOrWhiteSpace(targetAttrTag))
-            {
-                ed.WriteMessage("\n[LOI] Chua nhap Attribute TAG. Huy lenh.");
-                return;
-            }
-
-            // 2. Quet chon cac block khung ten
-            ed.WriteMessage($"\nQuet chon cac block '{targetBlockName}' can danh so:");
-
-            var filter = SelectionHelper.CreateTypeFilter("INSERT");
-            var selRes = ed.GetSelection(new PromptSelectionOptions
-            {
-                MessageForAdding = $"\nQuet chon cac block khung ten (co the chon nhieu): "
-            }, filter);
-
-            if (selRes.Status != PromptStatus.OK || selRes.Value == null || selRes.Value.Count == 0)
-            {
-                ed.WriteMessage("\nChua chon block nao. Huy lenh.");
-                return;
-            }
-
-            // 3. Doc va sap xep cac block theo huong da chon
-            int numberedCount = 0;
-            string summaryTotalValue = "";
-
-            CadDatabaseHelper.RunTransaction((tr, db) =>
-            {
-                var blockList = new List<(BlockReference blk, Point3d pos)>();
-
-                foreach (SelectedObject selObj in selRes.Value)
-                {
-                    if (selObj == null) continue;
-                    if (tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) is BlockReference blkRef)
-                    {
-                        // Loc theo ten block (neu nguoi dung da nhap)
-                        if (!string.IsNullOrWhiteSpace(targetBlockName))
-                        {
-                            string blkName = blkRef.GetEffectiveBlockName(tr);
-                            if (!string.Equals(blkName, targetBlockName, StringComparison.OrdinalIgnoreCase))
-                                continue;
-                        }
-
-                        blockList.Add((blkRef, blkRef.Position));
-                    }
-                }
-
-                if (blockList.Count == 0)
-                {
-                    ed.WriteMessage($"\n[LOI] Khong tim thay block '{targetBlockName}' nao trong vung chon.");
-                    return;
-                }
-
-                // Sap xep theo huong
-                switch (dirIndex)
-                {
-                    case 0: // Trai => Phai | Tren => Duoi
-                        blockList = blockList
-                            .OrderByDescending(b => b.pos.Y) // Tren truoc
-                            .ThenBy(b => b.pos.X)            // Trai truoc
-                            .ToList();
-                        break;
-                    case 1: // Trai => Phai | Duoi => Tren
-                        blockList = blockList
-                            .OrderBy(b => b.pos.Y)           // Duoi truoc
-                            .ThenBy(b => b.pos.X)
-                            .ToList();
-                        break;
-                    case 2: // Tren => Duoi | Trai => Phai
-                        blockList = blockList
-                            .OrderBy(b => b.pos.X)
-                            .ThenByDescending(b => b.pos.Y)
-                            .ToList();
-                        break;
-                }
-
-                // Tinh tong so trang thuc te
-                int actualTotal = autoTotal ? blockList.Count : Math.Max(totalPages, blockList.Count);
-                string totalStr = SheetNumberingForm.FormatNumber(actualTotal, styleIndex, twoDigits);
-                string totalValue = $"{totalPrefix}{totalStr}";
-                summaryTotalValue = totalValue;
-
-                // 4. Gan so thu tu
-                for (int i = 0; i < blockList.Count; i++)
-                {
-                    int currentNumber = startNum + i;
-                    string numStr = SheetNumberingForm.FormatNumber(currentNumber, styleIndex, twoDigits);
-                    string pageValue = $"{prefix}{numStr}{suffix}";
-
-                    // Gan so trang vao Tag chi dinh (vi du: A00)
-                    bool pageWritten = blockList[i].blk.SetAttributeValue(targetAttrTag, pageValue, tr);
-                    if (pageWritten)
-                    {
-                        numberedCount++;
-                    }
-                    else
-                    {
-                        ed.WriteMessage($"\n   [{i + 1}] [CANH BAO] Khong tim thay Tag '{targetAttrTag}' trong block.");
-                    }
-
-                    // Neu bat che do cap nhat tong trang, gan vao Tag tong (vi du: TSHEET)
-                    if (usePageMode && !string.IsNullOrWhiteSpace(totalPagesTag))
-                    {
-                        bool totalWritten = blockList[i].blk.SetAttributeValue(totalPagesTag, totalValue, tr);
-                        if (!totalWritten)
-                        {
-                            ed.WriteMessage($"\n   [{i + 1}] [CANH BAO] Khong tim thay Tag tong '{totalPagesTag}' trong block.");
-                        }
-                    }
-
-                    if (usePageMode && !string.IsNullOrWhiteSpace(totalPagesTag))
-                    {
-                        ed.WriteMessage($"\n   [{i + 1}] -> {targetAttrTag}='{pageValue}', {totalPagesTag}='{totalValue}'");
-                    }
-                    else
-                    {
-                        ed.WriteMessage($"\n   [{i + 1}] -> {targetAttrTag}='{pageValue}'");
-                    }
-                }
-            });
-
-            ed.WriteMessage($"\n\n[DSTTKBT] HOAN TAT! Da danh so {numberedCount} khung ten.");
-            if (usePageMode && !string.IsNullOrWhiteSpace(totalPagesTag))
-            {
-                ed.WriteMessage($" (Trang: Tag '{targetAttrTag}', Tong trang: Tag '{totalPagesTag}' = '{summaryTotalValue}')");
-            }
+            var window = new AutoNumberingWindow(openBlockAttrTab: false);
+            window.ShowModal();
         }
     }
 }
