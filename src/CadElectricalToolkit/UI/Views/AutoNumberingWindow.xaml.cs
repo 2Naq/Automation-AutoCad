@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -11,16 +12,26 @@ using CadElectricalToolkit.CadAccess;
 namespace CadElectricalToolkit.UI.Views
 {
     /// <summary>
-    /// Giao diện WPF hiện đại cho tính năng Đánh số thứ tự (DSTT & DSTTKBT)
-    /// Hỗ trợ cả STT Khung tên và STT Block Attribute / Text
+    /// Giao diện WPF hiện đại cho tính năng Đánh số thứ tự & Quản lý Attribute hàng loạt
+    /// Hỗ trợ STT Khung tên, STT Block Attribute/Text, và Đổi giá trị Attribute hàng loạt
     /// </summary>
     public partial class AutoNumberingWindow : Window
     {
-        public AutoNumberingWindow(bool openBlockAttrTab = true)
+        private readonly Dictionary<string, string> _sampleAttrValues = new(StringComparer.OrdinalIgnoreCase);
+
+        public AutoNumberingWindow(int tabIndex = 1)
         {
             InitializeComponent();
 
-            if (openBlockAttrTab)
+            if (tabIndex == 0 && TabItemFrame != null)
+            {
+                TabItemFrame.IsSelected = true;
+            }
+            else if (tabIndex == 2 && TabItemBatchAttr != null)
+            {
+                TabItemBatchAttr.IsSelected = true;
+            }
+            else if (TabItemBlockAttr != null)
             {
                 TabItemBlockAttr.IsSelected = true;
             }
@@ -28,6 +39,11 @@ namespace CadElectricalToolkit.UI.Views
             UpdateFramePreview();
             UpdateFramePagePreview();
             UpdateAttrPreview();
+            UpdateBatchPreview();
+        }
+
+        public AutoNumberingWindow(bool openBlockAttrTab) : this(openBlockAttrTab ? 1 : 0)
+        {
         }
 
         #region Live Preview Logic
@@ -113,6 +129,12 @@ namespace CadElectricalToolkit.UI.Views
         private void BtnChooseTag_Click(object sender, RoutedEventArgs e)
         {
             var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             bool isFrameTab = TabControlMain.SelectedIndex == 0;
 
             using (ed.StartUserInteraction(this))
@@ -181,6 +203,11 @@ namespace CadElectricalToolkit.UI.Views
         private void BtnAttrSelectBlocks_Click(object sender, RoutedEventArgs e)
         {
             var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             string prefix = TxtAttrPrefix.Text ?? "";
             string suffix = TxtAttrSuffix.Text ?? "";
@@ -309,6 +336,11 @@ namespace CadElectricalToolkit.UI.Views
         private void BtnAttrPickOneByOne_Click(object sender, RoutedEventArgs e)
         {
             var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             string prefix = TxtAttrPrefix.Text ?? "";
             string suffix = TxtAttrSuffix.Text ?? "";
@@ -408,6 +440,11 @@ namespace CadElectricalToolkit.UI.Views
         private void BtnFrameSelectBlocks_Click(object sender, RoutedEventArgs e)
         {
             var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             string prefix = TxtFramePrefix.Text ?? "";
             string suffix = TxtFrameSuffix.Text ?? "";
@@ -508,6 +545,352 @@ namespace CadElectricalToolkit.UI.Views
             if (count > 0)
             {
                 TxtFrameStatus.Text = $"✅ Đã áp dụng {count} khung tên vào CAD! (Bấm 'Đóng' nếu hoàn tất)";
+            }
+        }
+
+        #endregion
+
+        #region TAB 3: Đổi giá trị Attribute hàng loạt (Batch Edit Attributes)
+
+        private void TabControlMain_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.Source != TabControlMain) return;
+            if (TxtFooterTip == null) return;
+
+            switch (TabControlMain.SelectedIndex)
+            {
+                case 0:
+                    TxtFooterTip.Text = "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào khung tên để tự nhận diện Block và TAG số trang (A00).";
+                    break;
+                case 1:
+                    TxtFooterTip.Text = "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào đối tượng trên CAD để tự điền tên Block và TAG.";
+                    break;
+                case 2:
+                    TxtFooterTip.Text = "💡 Mẹo: Nhấn 'Chọn Block mẫu trên CAD' rồi click vào block (ví dụ: COIL) để tự nạp danh sách TAG (TERM01, TERM02...).";
+                    break;
+            }
+        }
+
+        private void BatchRule_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateBatchPreview();
+        }
+
+        private void BatchMode_Changed(object sender, RoutedEventArgs e)
+        {
+            bool isDirect = RbBatchModeDirect?.IsChecked == true;
+            if (PanelBatchDirect != null) PanelBatchDirect.Visibility = isDirect ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+            if (PanelBatchReplace != null) PanelBatchReplace.Visibility = isDirect ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+            UpdateBatchPreview();
+        }
+
+        private void CboBatchAttrTag_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CboBatchAttrTag?.SelectedItem != null)
+            {
+                string selectedTag = CboBatchAttrTag.SelectedItem.ToString() ?? "";
+                if (_sampleAttrValues.TryGetValue(selectedTag, out var val))
+                {
+                    if (TxtBatchSampleVal != null) TxtBatchSampleVal.Text = val;
+                    if (string.IsNullOrEmpty(TxtBatchFindText?.Text) && TxtBatchFindText != null)
+                    {
+                        TxtBatchFindText.Text = val;
+                    }
+                }
+            }
+            UpdateBatchPreview();
+        }
+
+        private void CboBatchAttrTag_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string typedTag = CboBatchAttrTag?.Text?.Trim() ?? "";
+            if (_sampleAttrValues.TryGetValue(typedTag, out var val))
+            {
+                if (TxtBatchSampleVal != null) TxtBatchSampleVal.Text = val;
+            }
+            UpdateBatchPreview();
+        }
+
+        private void BtnBatchClearBlockName_Click(object sender, RoutedEventArgs e)
+        {
+            if (TxtBatchBlockName != null) TxtBatchBlockName.Text = "";
+            UpdateBatchPreview();
+        }
+
+        private void UpdateBatchPreview()
+        {
+            if (LblBatchPreview == null) return;
+
+            string tag = CboBatchAttrTag?.Text?.Trim() ?? "";
+            string curVal = TxtBatchSampleVal?.Text ?? "";
+            if (string.IsNullOrEmpty(curVal) || curVal == "(Chưa chọn mẫu)") curVal = "14";
+
+            bool isDirect = RbBatchModeDirect?.IsChecked == true;
+            if (isDirect)
+            {
+                string newVal = TxtBatchNewValue?.Text ?? "";
+                if (string.IsNullOrEmpty(tag))
+                {
+                    LblBatchPreview.Text = "(Vui lòng chọn hoặc nhập Attribute TAG)";
+                }
+                else
+                {
+                    LblBatchPreview.Text = $"{tag}: \"{curVal}\"  ➔  \"{newVal}\"";
+                }
+            }
+            else
+            {
+                string findStr = TxtBatchFindText?.Text ?? "";
+                string repStr = TxtBatchReplaceText?.Text ?? "";
+                bool matchCase = ChkBatchMatchCase?.IsChecked == true;
+                string previewVal = ReplaceSubstring(curVal, findStr, repStr, matchCase);
+
+                if (string.IsNullOrEmpty(tag))
+                {
+                    LblBatchPreview.Text = "(Vui lòng chọn hoặc nhập Attribute TAG)";
+                }
+                else
+                {
+                    LblBatchPreview.Text = $"{tag}: \"{curVal}\"  ➔  \"{previewVal}\"";
+                }
+            }
+        }
+
+        private static string ReplaceSubstring(string input, string find, string replaceWith, bool matchCase)
+        {
+            if (string.IsNullOrEmpty(find)) return input;
+            if (matchCase) return input.Replace(find, replaceWith);
+            return Regex.Replace(input, Regex.Escape(find), replaceWith, RegexOptions.IgnoreCase);
+        }
+
+        private void BtnBatchPickSample_Click(object sender, RoutedEventArgs e)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            using (ed.StartUserInteraction(this))
+            {
+                var peo = new PromptEntityOptions("\nClick chọn một Block mẫu trên CAD (ví dụ: COIL): ");
+                peo.SetRejectMessage("\nVui lòng chọn một Block Reference!");
+                var per = ed.GetEntity(peo);
+                if (per.Status != PromptStatus.OK) return;
+
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    var ent = tr.GetObject(per.ObjectId, OpenMode.ForRead);
+                    if (ent is BlockReference blk)
+                    {
+                        string blkName = blk.GetEffectiveBlockName(tr);
+                        _sampleAttrValues.Clear();
+                        CboBatchAttrTag.Items.Clear();
+
+                        string closestTag = "";
+                        double minDist = double.MaxValue;
+
+                        foreach (ObjectId attId in blk.AttributeCollection)
+                        {
+                            if (tr.GetObject(attId, OpenMode.ForRead) is AttributeReference att)
+                            {
+                                _sampleAttrValues[att.Tag] = att.TextString;
+                                CboBatchAttrTag.Items.Add(att.Tag);
+
+                                double dist = att.Position.DistanceTo(per.PickedPoint);
+                                if (dist < minDist)
+                                {
+                                    minDist = dist;
+                                    closestTag = att.Tag;
+                                }
+                            }
+                        }
+
+                        TxtBatchBlockName.Text = blkName;
+                        TxtBatchSampleInfo.Text = $"Block: '{blkName}' ({_sampleAttrValues.Count} TAGs)";
+
+                        if (!string.IsNullOrEmpty(closestTag))
+                        {
+                            CboBatchAttrTag.SelectedItem = closestTag;
+                            if (_sampleAttrValues.TryGetValue(closestTag, out var val))
+                            {
+                                TxtBatchSampleVal.Text = val;
+                                TxtBatchFindText.Text = val;
+                            }
+                        }
+                        else if (CboBatchAttrTag.Items.Count > 0)
+                        {
+                            CboBatchAttrTag.SelectedIndex = 0;
+                        }
+
+                        UpdateBatchPreview();
+                        ed.WriteMessage($"\n[MẪU ĐÃ CHỌN] Block: '{blkName}' | Có {_sampleAttrValues.Count} TAGs. Đang chọn TAG: '{closestTag}'");
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\nĐối tượng đã chọn không phải là Block Reference.");
+                    }
+                });
+            }
+        }
+
+        private void BtnBatchApply_Click(object sender, RoutedEventArgs e)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string targetBlockName = TxtBatchBlockName.Text.Trim();
+            string targetTag = CboBatchAttrTag.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(targetTag))
+            {
+                MessageBox.Show("Vui lòng chọn hoặc nhập Attribute TAG cần đổi (ví dụ: TERM01, TERM02, MODEL, NAME...).", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            bool isDirect = RbBatchModeDirect.IsChecked == true;
+            string newValFixed = TxtBatchNewValue.Text;
+            string findText = TxtBatchFindText.Text;
+            string replaceText = TxtBatchReplaceText.Text;
+            bool matchCase = ChkBatchMatchCase.IsChecked == true;
+
+            if (!isDirect && string.IsNullOrEmpty(findText))
+            {
+                MessageBox.Show("Vui lòng nhập chuỗi cần tìm trong ô 'Tìm chuỗi'.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            int count = 0;
+            using (ed.StartUserInteraction(this))
+            {
+                string msgTarget = string.IsNullOrEmpty(targetBlockName)
+                    ? $"tất cả các Block có chứa TAG '{targetTag}'"
+                    : $"các Block '{targetBlockName}'";
+                var pso = new PromptSelectionOptions
+                {
+                    MessageForAdding = $"\nQuét chọn {msgTarget} để đổi Attribute '{targetTag}': "
+                };
+
+                var filter = SelectionHelper.CreateTypeFilter("INSERT");
+                var selRes = ed.GetSelection(pso, filter);
+                if (selRes.Status != PromptStatus.OK || selRes.Value == null || selRes.Value.Count == 0)
+                {
+                    ed.WriteMessage("\nChưa chọn Block nào.");
+                    return;
+                }
+
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    foreach (SelectedObject selObj in selRes.Value)
+                    {
+                        if (selObj == null) continue;
+                        if (tr.GetObject(selObj.ObjectId, OpenMode.ForWrite) is BlockReference blk)
+                        {
+                            if (!string.IsNullOrWhiteSpace(targetBlockName))
+                            {
+                                string bName = blk.GetEffectiveBlockName(tr);
+                                if (!string.Equals(bName, targetBlockName, StringComparison.OrdinalIgnoreCase))
+                                    continue;
+                            }
+
+                            string? curVal = blk.GetAttributeValue(targetTag, tr);
+                            if (curVal == null) continue; // Block không chứa TAG này
+
+                            string calculatedNewVal = isDirect
+                                ? newValFixed
+                                : ReplaceSubstring(curVal, findText, replaceText, matchCase);
+
+                            bool written = blk.SetAttributeValue(targetTag, calculatedNewVal, tr);
+                            if (written) count++;
+                        }
+                    }
+                });
+
+                ed.WriteMessage($"\n[ĐỔI ATTRIBUTE] HOÀN TẤT! Đã cập nhật thành công {count} Block có TAG '{targetTag}'.");
+                ed.Regen();
+            }
+
+            if (count > 0)
+            {
+                TxtBatchStatus.Text = $"✅ Đã đổi thành công {count} Block vào CAD! (TAG: '{targetTag}')";
+            }
+            else
+            {
+                TxtBatchStatus.Text = "⚠️ Không tìm thấy Block nào phù hợp trong vùng chọn.";
+            }
+        }
+
+        private void BtnBatchPickOneByOne_Click(object sender, RoutedEventArgs e)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null)
+            {
+                MessageBox.Show("Tính năng này yêu cầu AutoCAD đang mở bản vẽ.\nHiện tại bạn đang ở chế độ Test Runner (chạy thử giao diện độc lập).", "Chế độ Test Runner", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string targetTag = CboBatchAttrTag.Text.Trim();
+            if (string.IsNullOrWhiteSpace(targetTag))
+            {
+                MessageBox.Show("Vui lòng chọn hoặc nhập Attribute TAG cần đổi (ví dụ: TERM01, TERM02...).", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            bool isDirect = RbBatchModeDirect.IsChecked == true;
+            string newValFixed = TxtBatchNewValue.Text;
+            string findText = TxtBatchFindText.Text;
+            string replaceText = TxtBatchReplaceText.Text;
+            bool matchCase = ChkBatchMatchCase.IsChecked == true;
+
+            int count = 0;
+            using (ed.StartUserInteraction(this))
+            {
+                ed.WriteMessage($"\n--- CLICK TỪNG BLOCK ĐỂ ĐỔI ATTRIBUTE '{targetTag}' (ESC ĐỂ DỪNG) ---");
+                while (true)
+                {
+                    var peo = new PromptEntityOptions($"\nClick chọn Block tiếp theo để đổi '{targetTag}' (ESC để dừng): ");
+                    peo.SetRejectMessage("\nVui lòng chọn một Block Reference!");
+                    var per = ed.GetEntity(peo);
+                    if (per.Status != PromptStatus.OK) break;
+
+                    bool updated = false;
+                    string resultVal = "";
+                    CadDatabaseHelper.RunTransaction((tr, db) =>
+                    {
+                        if (tr.GetObject(per.ObjectId, OpenMode.ForWrite) is BlockReference blk)
+                        {
+                            string? curVal = blk.GetAttributeValue(targetTag, tr);
+                            if (curVal != null)
+                            {
+                                resultVal = isDirect ? newValFixed : ReplaceSubstring(curVal, findText, replaceText, matchCase);
+                                updated = blk.SetAttributeValue(targetTag, resultVal, tr);
+                            }
+                        }
+                    });
+
+                    if (updated)
+                    {
+                        count++;
+                        ed.WriteMessage($" -> [{count}] Đổi '{targetTag}' thành: '{resultVal}'");
+                    }
+                    else
+                    {
+                        ed.WriteMessage($"\nBlock này không chứa Attribute TAG '{targetTag}'.");
+                    }
+                }
+
+                ed.WriteMessage($"\n[ĐỔI ATTRIBUTE] Đã đổi {count} block.");
+                ed.Regen();
+            }
+
+            if (count > 0)
+            {
+                TxtBatchStatus.Text = $"✅ Đã đổi {count} Block vào CAD! (TAG: '{targetTag}')";
             }
         }
 

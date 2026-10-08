@@ -133,14 +133,14 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#0F172A" Padding="16,10">
+        <Border Grid.Row="0" Background="#242526" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Border Background="#0284C7" CornerRadius="4" Width="28" Height="28" Margin="0,0,10,0">
-                    <TextBlock Text="№" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Background="#000000" CornerRadius="4" Width="32" Height="32" Margin="0,0,10,0" Padding="3,0,3,0">
+                    <TextBlock Text="AN" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="ĐÁNH SỐ THỨ TỰ TỰ ĐỘNG" Foreground="White" FontWeight="Bold" FontSize="13"/>
@@ -150,12 +150,12 @@
         </Border>
 
         <!-- Tabs -->
-        <TabControl x:Name="TabControlMain" Grid.Row="1" Margin="8,6,8,4" Background="Transparent" BorderThickness="0">
+        <TabControl x:Name="TabControlMain" Grid.Row="1" Margin="8,6,8,4" Background="Transparent" BorderThickness="0" SelectionChanged="TabControlMain_SelectionChanged">
             
             <!-- ========================================== -->
             <!-- TAB 1: STT KHUNG TÊN                        -->
             <!-- ========================================== -->
-            <TabItem Header="STT khung tên" FontWeight="SemiBold" FontSize="12">
+            <TabItem x:Name="TabItemFrame" Header="STT khung tên" FontWeight="SemiBold" FontSize="12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
                     <StackPanel>
                         <!-- Quy tắc đánh số -->
@@ -268,7 +268,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Attribute TAG:" Style="{StaticResource FieldLabel}"/>
                                     <TextBox x:Name="TxtFrameAttrTag" Grid.Column="1" Text="A00" FontWeight="Bold" Foreground="#B91C1C"/>
-                                    <Button x:Name="BtnFrameChooseTag" Grid.Column="2" Content="🎯 Chọn TAG" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Click="BtnChooseTag_Click"/>
+                                    <Button x:Name="BtnFrameChooseTag" Grid.Column="2" Width="80" Content="🎯 Chọn TAG " Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Click="BtnChooseTag_Click"/>
                                 </Grid>
 
                                 <Grid Margin="0,0,0,6">
@@ -380,7 +380,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Attribute TAG:" Style="{StaticResource FieldLabel}"/>
                                     <TextBox x:Name="TxtAttrTagName" Grid.Column="1" Text="" FontWeight="Bold" Foreground="#B91C1C" ToolTip="Tên thẻ Attribute cần đánh số (ví dụ: TEN_CHAN, WIRE_NO, TB_TAG...)"/>
-                                    <Button x:Name="BtnAttrChooseTag" Grid.Column="2" Content="🎯 Chọn TAG" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Click="BtnChooseTag_Click"/>
+                                    <Button x:Name="BtnAttrChooseTag" Grid.Column="2" Width="80" Content="🎯 Chọn TAG " Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Click="BtnChooseTag_Click"/>
                                 </Grid>
 
                                 <Grid Margin="0,0,0,6">
@@ -404,26 +404,195 @@
                         <!-- Action Buttons -->
                         <Grid Margin="0,2,0,4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="350"/>
                                 <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Button x:Name="BtnAttrSelectBlocks" Grid.Column="0" Content="⚡ QUÉT CHỌN &amp; ÁP DỤNG HÀNG LOẠT" Style="{StaticResource PrimaryButton}" Height="36" Click="BtnAttrSelectBlocks_Click"/>
-                            <Button x:Name="BtnAttrPickOneByOne" Grid.Column="2" Content="👆 Click từng cái" Style="{StaticResource SecondaryButton}" Height="36" Padding="12,0" ToolTip="Click chuột liên tục vào từng Text/Block để đánh số tăng dần" Click="BtnAttrPickOneByOne_Click"/>
+                            <Button x:Name="BtnAttrPickOneByOne" HorizontalContentAlignment="Center" Grid.Column="2" Content="👆 Click từng cái" Style="{StaticResource SecondaryButton}" Height="36" Padding="12,0" ToolTip="Click chuột liên tục vào từng Text/Block để đánh số tăng dần" Click="BtnAttrPickOneByOne_Click"/>
                         </Grid>
 
                         <TextBlock x:Name="TxtAttrStatus" Text="" FontSize="11" FontWeight="SemiBold" Foreground="#15803D" TextAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-        </TabControl>
 
-        <!-- Bottom Footer -->
-        <Border Grid.Row="2" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,8">
-            <DockPanel>
-                <TextBlock Text="💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào đối tượng trên CAD để tự điền tên Block và TAG." VerticalAlignment="Center" FontSize="11" Foreground="#64748B"/>
-                <Button Content="Đóng (Hoàn tất)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Right" Width="105" Click="BtnClose_Click"/>
-            </DockPanel>
+            <!-- ========================================== -->
+            <!-- TAB 3: ĐỔI GIÁ TRỊ ATTRIBUTE HÀNG LOẠT    -->
+            <!-- ========================================== -->
+            <TabItem x:Name="TabItemBatchAttr" Header="Đổi Attribute hàng loạt" FontWeight="SemiBold" FontSize="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                    <StackPanel>
+                        <!-- Nhóm 1: Block & Attribute mục tiêu -->
+                        <Border Style="{StaticResource CardPanel}">
+                            <StackPanel>
+                                <TextBlock Text="Block &amp; Attribute mục tiêu" Style="{StaticResource SectionHeader}"/>
+
+                                <!-- Nút chọn mẫu CAD -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnBatchPickSample" Grid.Column="0" Content="  🎯 Chọn Block mẫu trên CAD  " 
+                                            Style="{StaticResource SecondaryButton}" Height="30" Padding="10,0" 
+                                            ToolTip="Click vào một Block trên bản vẽ (ví dụ: COIL) để tự nhận diện Block Name và nạp danh sách Attribute TAG" 
+                                            Click="BtnBatchPickSample_Click"/>
+                                    <TextBlock x:Name="TxtBatchSampleInfo" Grid.Column="1" Text="(Click để tự nạp Block &amp; TAGs)" 
+                                               FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+
+                                <!-- Block name -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Block name:" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox x:Name="TxtBatchBlockName" Grid.Column="1" Text="" FontWeight="SemiBold" 
+                                             TextChanged="BatchRule_Changed"
+                                             ToolTip="Tên Block mục tiêu (để trống nếu muốn áp dụng cho mọi block có chứa TAG đã chọn)"/>
+                                    <Button x:Name="BtnBatchClearBlockName" Grid.Column="2" Content="  Tất cả  " 
+                                            Style="{StaticResource SecondaryButton}" Height="28" Padding="8,0" Margin="4,0,0,0" 
+                                            ToolTip="Xóa trống tên block để áp dụng cho bất kỳ block nào có chứa Attribute TAG đã chọn" 
+                                            Click="BtnBatchClearBlockName_Click"/>
+                                </Grid>
+
+                                <!-- Attribute TAG -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Attribute TAG:" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox x:Name="CboBatchAttrTag" Grid.Column="1" IsEditable="True" 
+                                              FontWeight="Bold" Foreground="#B91C1C" 
+                                              SelectionChanged="CboBatchAttrTag_SelectionChanged"
+                                              TextBoxBase.TextChanged="CboBatchAttrTag_TextChanged"
+                                              ToolTip="Chọn Attribute TAG từ danh sách hoặc tự gõ (ví dụ: TERM01, TERM02, MODEL, NAME...)"/>
+                                </Grid>
+
+                                <!-- Giá trị mẫu hiện tại -->
+                                <Grid Margin="0,0,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Giá trị hiện tại:" Style="{StaticResource FieldLabel}"/>
+                                    <TextBlock x:Name="TxtBatchSampleVal" Grid.Column="1" Text="(Chưa chọn mẫu)" 
+                                               FontStyle="Italic" Foreground="#475569" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Nhóm 2: Nội dung cần đổi -->
+                        <Border Style="{StaticResource CardPanel}">
+                            <StackPanel>
+                                <TextBlock Text="Nội dung cần đổi" Style="{StaticResource RedSectionHeader}"/>
+
+                                <!-- RadioButtons chế độ -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <RadioButton x:Name="RbBatchModeDirect" Grid.Column="0" Content="Gán giá trị mới cố định" 
+                                                 IsChecked="True" FontWeight="SemiBold" FontSize="11.5" Foreground="#334155"
+                                                 Checked="BatchMode_Changed"/>
+                                    <RadioButton x:Name="RbBatchModeReplace" Grid.Column="1" Content="Tìm &amp; Thay thế (Replace)" 
+                                                 FontWeight="SemiBold" FontSize="11.5" Foreground="#334155"
+                                                 Checked="BatchMode_Changed"/>
+                                </Grid>
+
+                                <!-- Panel Gán trực tiếp -->
+                                <StackPanel x:Name="PanelBatchDirect" Visibility="Visible">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Giá trị mới:" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox x:Name="TxtBatchNewValue" Grid.Column="1" Text="" FontWeight="Bold" Foreground="#0284C7"
+                                                 TextChanged="BatchRule_Changed"
+                                                 ToolTip="Nhập giá trị mới cần gán (ví dụ: A1, 24VDC, OMRON...)"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Panel Tìm & Thay thế -->
+                                <StackPanel x:Name="PanelBatchReplace" Visibility="Collapsed">
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Tìm chuỗi:" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox x:Name="TxtBatchFindText" Grid.Column="1" Text="" 
+                                                 TextChanged="BatchRule_Changed"
+                                                 ToolTip="Chuỗi con cần tìm trong giá trị Attribute hiện tại (ví dụ: 14)"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Thay bằng:" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox x:Name="TxtBatchReplaceText" Grid.Column="1" Text="" FontWeight="Bold" Foreground="#0284C7"
+                                                 TextChanged="BatchRule_Changed"
+                                                 ToolTip="Chuỗi mới thay thế vào (ví dụ: A1)"/>
+                                    </Grid>
+                                    <CheckBox x:Name="ChkBatchMatchCase" Content="Phân biệt chữ hoa / chữ thường" 
+                                              FontSize="11" Margin="90,0,0,4" Foreground="#64748B"
+                                              Checked="BatchRule_Changed" Unchecked="BatchRule_Changed"/>
+                                </StackPanel>
+
+                                <!-- Box Preview -->
+                                <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,4,0,0">
+                                    <DockPanel>
+                                        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="LblBatchPreview" Text="(Nhập giá trị để xem trước)" FontWeight="Bold" FontSize="12.5" Foreground="#15803D" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Action Buttons -->
+                        <Grid Margin="0,2,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="350"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnBatchApply" Grid.Column="0" Content="⚡ QUÉT CHỌN &amp; ĐỔI HÀNG LOẠT" 
+                                    Style="{StaticResource PrimaryButton}" Height="36" Click="BtnBatchApply_Click"/>
+                            <Button x:Name="BtnBatchPickOneByOne" HorizontalContentAlignment="Center" Grid.Column="2" 
+                                    Content="👆 Click từng cái" Style="{StaticResource SecondaryButton}" Height="36" Padding="12,0" 
+                                    ToolTip="Click chuột liên tục vào từng Block để đổi giá trị Attribute" 
+                                    Click="BtnBatchPickOneByOne_Click"/>
+                        </Grid>
+
+                        <TextBlock x:Name="TxtBatchStatus" Text="" FontSize="11" FontWeight="SemiBold" Foreground="#15803D" TextAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <Border Grid.Row="2" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,10">
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="TxtFooterTip" Text="💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào đối tượng trên CAD để tự điền tên Block và TAG." 
+                   VerticalAlignment="Center" 
+                   HorizontalAlignment="Left"
+                   FontSize="11" 
+                   Margin="0,0,0,8"       
+                   Foreground="#64748B"
+                   TextWrapping="Wrap"/>
+                <Button Content="Đóng (Hoàn tất)" 
+                Style="{StaticResource SecondaryButton}" 
+                HorizontalAlignment="Right" 
+                Width="105" 
+                Click="BtnClose_Click"/>
+
+            </StackPanel>
         </Border>
+
     </Grid>
 </Window>

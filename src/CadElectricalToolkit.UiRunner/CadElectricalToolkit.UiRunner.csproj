@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RootNamespace>CadElectricalToolkit.UiRunner</RootNamespace>
+    <AssemblyName>CadElectricalToolkit.UiRunner</AssemblyName>
+    
+    <!-- Path to AutoCAD installation for assembly fallback -->
+    <AutoCadPath Condition="'$(AutoCadPath)' == ''">C:\Program Files\Autodesk\AutoCAD 2021</AutoCadPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CadElectricalToolkit\CadElectricalToolkit.csproj" />
+  </ItemGroup>
+
+  <!-- AutoCAD .NET Assemblies reference -->
+  <ItemGroup Condition="Exists('$(AutoCadPath)\accoremgd.dll')">
+    <Reference Include="AcCoreMgd">
+      <HintPath>$(AutoCadPath)\accoremgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcDbMgd">
+      <HintPath>$(AutoCadPath)\acdbmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcMgd">
+      <HintPath>$(AutoCadPath)\acmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(AutoCadPath)\accoremgd.dll')">
+    <PackageReference Include="AutoCAD.NET" Version="24.0.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+</Project>

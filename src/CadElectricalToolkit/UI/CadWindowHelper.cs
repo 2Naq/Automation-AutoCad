@@ -17,8 +17,19 @@ namespace CadElectricalToolkit.UI
         {
             if (window == null) throw new ArgumentNullException(nameof(window));
 
-            var helper = new WindowInteropHelper(window);
-            helper.Owner = cadApp.MainWindow.Handle;
+            try
+            {
+                if (cadApp.MainWindow != null && cadApp.MainWindow.Handle != IntPtr.Zero)
+                {
+                    var helper = new WindowInteropHelper(window);
+                    helper.Owner = cadApp.MainWindow.Handle;
+                }
+            }
+            catch
+            {
+                // Bỏ qua lỗi gán Owner khi chạy trong chế độ Test Runner hoặc UI Designer
+            }
+
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             return window.ShowDialog();
         }

@@ -47,6 +47,13 @@ namespace CadElectricalToolkit.UI.Views
                 },
                 new CommandItem
                 {
+                    Code = "DOIATT",
+                    Title = "Đổi giá trị Attribute hàng loạt",
+                    Description = "Giao diện WPF: Chọn block mẫu trên CAD để tự nạp danh sách TAG (ví dụ: TERM01, TERM02, MODEL...), gán giá trị mới hoặc Tìm & Thay thế hàng loạt.",
+                    Category = "Đánh số & Soạn thảo"
+                },
+                new CommandItem
+                {
                     Code = "CDN",
                     Title = "Cộng Dimension nhanh",
                     Description = "Tính tổng chiều dài tất cả các kích thước Dimension được chọn và tự sao chép kết quả vào Clipboard.",

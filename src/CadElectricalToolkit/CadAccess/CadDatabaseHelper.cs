@@ -9,9 +9,28 @@ namespace CadElectricalToolkit.CadAccess
     /// </summary>
     public static class CadDatabaseHelper
     {
-        public static Document ActiveDoc => Application.DocumentManager.MdiActiveDocument;
-        public static Database ActiveDb => ActiveDoc.Database;
-        public static Editor ActiveEd => ActiveDoc.Editor;
+        public static Document? ActiveDoc
+        {
+            get
+            {
+                try
+                {
+                    return Application.DocumentManager?.MdiActiveDocument;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public static Database ActiveDb => ActiveDoc?.Database!;
+        public static Editor ActiveEd => ActiveDoc?.Editor!;
+
+        /// <summary>
+        /// Kiểm tra plugin có đang chạy trong môi trường AutoCAD thực tế hay không
+        /// </summary>
+        public static bool IsInCad => ActiveDoc != null;
 
         /// <summary>
         /// Ghi thông báo ra dòng lệnh AutoCAD (Command Line)

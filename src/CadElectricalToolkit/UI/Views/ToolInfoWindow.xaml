@@ -124,22 +124,22 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#0F172A" Padding="18,14">
+        <Border Grid.Row="0" Background="#242526" Padding="18,14">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Border Background="#0284C7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
-                    <TextBlock Text="⚡" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Background="#000000" CornerRadius="4" Width="36" Height="36" Margin="0,0,10,0" Padding="3,0,3,0">
+                    <TextBlock Text="AN" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="CadElectricalToolkit" Foreground="White" FontWeight="Bold" FontSize="15"/>
+                    <TextBlock Text="Tool lỏ" Foreground="White" FontWeight="Bold" FontSize="15"/>
                     <TextBlock Text="Bộ công cụ tự động hóa bản vẽ mạch điện trong AutoCAD" Foreground="#94A3B8" FontSize="11"/>
                 </StackPanel>
                 <Border Grid.Column="2" Background="#1E293B" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
-                    <TextBlock Text="v2.0 WPF" Foreground="#38BDF8" FontWeight="Bold" FontSize="11"/>
+                    <TextBlock Text="v0.0.1 WPF" Foreground="#38BDF8" FontWeight="Bold" FontSize="11"/>
                 </Border>
             </Grid>
         </Border>
@@ -160,7 +160,7 @@
 
                 <!-- Filter Chips -->
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <RadioButton x:Name="RbFilterAll" Content="Tất cả (25)" Style="{StaticResource ChipButton}" IsChecked="True" Checked="Filter_Checked"/>
                         <RadioButton x:Name="RbFilterDrafting" Content="Đánh số &amp; Soạn thảo" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
                         <RadioButton x:Name="RbFilterCrossRef" Content="Relay &amp; Khung 14 chân" Style="{StaticResource ChipButton}" Checked="Filter_Checked"/>
@@ -201,8 +201,8 @@
 
                                 <!-- Actions -->
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Content="Chạy" Style="{StaticResource RunButton}" Tag="{Binding Code}" Click="BtnRun_Click" Margin="0,0,4,0"/>
-                                    <Button Content="Copy" Style="{StaticResource MiniButton}" Tag="{Binding Code}" Click="BtnCopy_Click"/>
+                                    <Button Content="Chạy" Width="40" Style="{StaticResource RunButton}" Tag="{Binding Code}" Click="BtnRun_Click" Margin="0,0,4,0"/>
+                                    <Button Content="Copy" Width="40" Style="{StaticResource MiniButton}" Tag="{Binding Code}" Click="BtnCopy_Click"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -215,8 +215,8 @@
         <Border Grid.Row="3" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,10">
             <DockPanel>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="CadElectricalToolkit - C# .NET 4.8 / AutoCAD 2021+" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
-                    <TextBlock Text="Phát triển tự động hóa điện công nghiệp" FontSize="10" Foreground="#94A3B8"/>
+                    <TextBlock Text="Tool lỏ - C# .NET 4.8 / AutoCAD 2021+" FontSize="11" FontWeight="SemiBold" Foreground="#334155"/>
+                    <TextBlock Text="Built by Automation Notes (AN)" FontSize="10" Foreground="#94A3B8"/>
                 </StackPanel>
                 <Button Content="Đóng" Width="75" Height="28" HorizontalAlignment="Right" Style="{StaticResource MiniButton}" Click="BtnClose_Click"/>
             </DockPanel>

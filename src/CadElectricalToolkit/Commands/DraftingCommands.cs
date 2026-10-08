@@ -75,6 +75,17 @@ namespace CadElectricalToolkit.Commands
         }
 
         /// <summary>
+        /// DOIATT / DATTR : Đổi giá trị Attribute hàng loạt trên các Block được chọn (ví dụ: chân TERM01 trên COIL)
+        /// </summary>
+        [CommandMethod("DOIATT")]
+        [CommandMethod("DATTR")]
+        public void BatchChangeAttribute()
+        {
+            var window = new AutoNumberingWindow(tabIndex: 2);
+            window.ShowModal();
+        }
+
+        /// <summary>
         /// GTD : Gom text dọc - Căn gióng các đối tượng Text theo phương thẳng đứng
         /// </summary>
         [CommandMethod("GTD")]
