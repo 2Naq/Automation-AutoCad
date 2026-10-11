@@ -75,13 +75,28 @@ C_AutoCad/
         │   ├── PlcCommands.cs               # TKPLCIN, TKPLCOUT, SYNPLC
         │   ├── SheetCommands.cs             # TKDMBV, SYNREV, SYNTF, GBV, TBV
         │   ├── BomCommands.cs               # TKDMTB, CAD2EXCEL
-        │   ├── DraftingCommands.cs          # CDN, DSTT, GTD, GTN
+        │   ├── DraftingCommands.cs          # CDN, DSTT, DOIATT, DATTR, GTD, GTN
         │   └── AboutCommands.cs             # ELECINFO, TT, TAOBLOCKMAU, SAMPLEBLOCKS
         └── UI/
             ├── CadWindowHelper.cs           # WPF Window modal dialog & AutoCAD handle integration
-            └── Views/                       # Modern WPF Windows (XAML & Code-behind)
+            ├── Mvvm/                        # Core MVVM infrastructure
+            │   ├── ViewModelBase.cs         # INotifyPropertyChanged base implementation
+            │   └── RelayCommand.cs          # ICommand implementation for WPF bindings
+            ├── Services/                    # Decoupled CAD interaction services
+            │   ├── ICadInteractionService.cs# CAD picking, selecting, batch editing contract
+            │   └── CadInteractionService.cs  # Implementation using AutoCAD Editor & Database
+            ├── ViewModels/                  # MVVM ViewModels
+            │   ├── AutoNumberingViewModel.cs# ViewModel for Frame, Block Attr, & Batch Replace tabs
+            │   └── ToolInfoViewModel.cs     # ViewModel for command search & cheatsheet window
+            └── Views/                       # Modern Dark WPF Windows (pure XAML & thin code-behind)
                 ├── ToolInfoWindow.xaml      # Commands cheatsheet & quick run UI (WPF)
-                └── AutoNumberingWindow.xaml # Auto numbering dialog for Frames & Block attributes (WPF)
+                ├── ToolInfoWindow.xaml.cs   # Thin code-behind wiring ToolInfoViewModel
+                ├── AutoNumberingWindow.xaml # Auto numbering dialog for Frames & Block attributes (WPF)
+                └── AutoNumberingWindow.xaml.cs # Thin code-behind wiring AutoNumberingViewModel
+    └── CadElectricalToolkit.UiRunner/       # Standalone UI runner for testing outside AutoCAD
+        ├── CadElectricalToolkit.UiRunner.csproj
+        ├── App.xaml / App.xaml.cs
+        └── MainWindow.xaml / MainWindow.xaml.cs
 ```
 
 ---
@@ -204,10 +219,17 @@ sequenceDiagram
 - **Direction 1 (Coil $\rightarrow$ Contacts):** Resolves coil position $\rightarrow$ Writes to `ADDRESS_COIL` on contacts.
 - **Direction 2 (Contacts $\rightarrow$ Relay Frame):** Resolves each contact's grid position $\rightarrow$ Writes to `ADDRESS_1..4` on `KHUNG 14 CHAN`.
 
-### 5.4. Sheet & Block Attribute Numbering with WPF UI (`DSTTKBT` & `DSTT`)
-- Opens WPF [`AutoNumberingWindow`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml).
-- **Tab 1: STT khung tên:** Sets start number, prefix, suffix, style (1, 01, A, 001), sorting direction, and page mode (`Current/Total`, e.g., `01 /24`).
-- **Tab 2: STT block attribute:** Sets prefix (e.g. `DI.`), suffix, start number, step, target block name (e.g. `ten_chan_domino`), attribute TAG (e.g. `TEN_CHAN`), interactive CAD tag picker (`Chọn TAG`), and batch numbering or click-by-click numbering directly on CAD.
+### 5.4. Sheet & Block Attribute Numbering with WPF UI (`DSTTKBT`, `DSTT`, `DOIATT`)
+- Opens WPF [`AutoNumberingWindow`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml) powered by [`AutoNumberingViewModel`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/ViewModels/AutoNumberingViewModel.cs).
+- **Tab 1: STT khung tên (`DSTTKBT`):** Sets start number, prefix, suffix, style (`1`, `01`, `A`, `I`), sorting direction (4 orthogonal directions), and page mode (`Current/Total`, e.g., `01 /24` into tags `A00` & `TSHEET`).
+- **Tab 2: STT block attribute (`DSTT`):** Sets prefix (e.g. `DI.`), suffix, start number, step, target block name (e.g. `ten_chan_domino`), attribute TAG (e.g. `TEN_CHAN`), interactive CAD tag picker (`Chọn TAG`), and batch numbering or click-by-click numbering directly on CAD.
+- **Tab 3: Đổi Attribute hàng loạt (`DOIATT` / `DATTR`):** Select sample block from CAD to automatically load all attribute tags, supports Direct Value Assignment or Find & Replace (case sensitive option) across selected blocks or click-by-click.
+
+### 5.5. Modern WPF & MVVM Architecture Pattern
+All plugin UI dialogs follow a clean, decoupled **MVVM (Model-View-ViewModel)** architecture:
+- **View (`src/CadElectricalToolkit/UI/Views/`):** Pure XAML with thin code-behind. Uses a modern dark theme (`#0F1117`, `#1A1D27`), subtle glassmorphism drop shadows, rounded corners, accent gradients (`#3B82F6` to `#8B5CF6`), and clear visual hierarchy. Zero business logic in code-behind; all events bind via `ICommand` and `{Binding}`.
+- **ViewModel (`src/CadElectricalToolkit/UI/ViewModels/`):** Inherits from `ViewModelBase` (`INotifyPropertyChanged`). Manages form state, live preview calculations, and commands (`RelayCommand`). Does **not** access AutoCAD databases directly.
+- **Service Layer (`src/CadElectricalToolkit/UI/Services/`):** Implements `ICadInteractionService` / `CadInteractionService`. Encapsulates all AutoCAD Editor prompts (`ed.GetSelection`, `ed.GetPoint`), document locking (`ed.Document.LockDocument()`), and `StartUserInteraction` calls. ViewModels receive `ICadInteractionService` via dependency injection, allowing easy unit testing without active AutoCAD sessions.
 
 ---
 

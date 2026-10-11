@@ -12,9 +12,7 @@
 <div align="center">
 
 [![GitHub Release](https://img.shields.io/github/v/release/2Naq/Automation-AutoCad?color=blue&label=T%E1%BA%A3i%20V%E1%BB%81%20(Release))](https://github.com/2Naq/Automation-AutoCad/releases)
-[![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![AutoCAD](https://img.shields.io/badge/AutoCAD-2021%2B-red?logo=autodesk&logoColor=white)](https://www.autodesk.com/products/autocad)
-[![Language: C#](https://img.shields.io/badge/Language-C%23-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Website](https://img.shields.io/badge/Website-Shareme-green.svg)](https://2naq.github.io/shareme/)
 
@@ -22,15 +20,13 @@
 
 ---
 
-## 🚀 Tải về & Cài đặt nhanh (Không cần build)
+## Tải về & Cài đặt
 
-👉 **[Bấm vào đây để tải bản mới nhất từ GitHub Releases](https://github.com/2Naq/Automation-AutoCad/releases)**
+**[Bấm vào đây để tải bản mới nhất từ GitHub Releases](https://github.com/2Naq/Automation-AutoCad/releases)**
 
-Có 2 cách sử dụng sau khi tải:
-
-### Cách 1: Tự động nạp khi mở AutoCAD (Khuyên dùng)
+### Cách 1: Tự động nạp khi mở AutoCAD
 1. Tải file `CadElectricalToolkit-bundle.zip` từ mục **Releases**.
-2. Giải nén thư mục `CadElectricalToolkit.bundle` vào đường dẫn:
+2. Giải nén thư mục `CadElectricalToolkit.bundle` vào đường dẫn Autoloader:
    ```text
    %APPDATA%\Autodesk\ApplicationPlugins\
    (Tương đương: C:\Users\<Tên_Bạn>\AppData\Roaming\Autodesk\ApplicationPlugins\)

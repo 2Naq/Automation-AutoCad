@@ -7,33 +7,43 @@ Tài liệu này mô tả chi tiết kiến trúc kỹ thuật, mô hình dữ l
 ## 1. Sơ đồ Kiến trúc Tổng thể
 
 ```
-                 +--------------------------------------------+
-                 |            Giao diện Người dùng            |
-                 |  (Command Line / WinForms Modal Dialogs)   |
-                 +---------------------+----------------------+
-                                       |
-                                       v
-                 +--------------------------------------------+
-                 |            Lớp Điều khiển Lệnh             |
-                 |           (Commands / Controllers)         |
-                 |  CrossRefCommands, SheetCommands, v.v.     |
-                 +---------------------+----------------------+
-                                       |
-                   +-------------------+-------------------+
-                   |                                       |
-                   v                                       v
-+--------------------------------------+ +--------------------------------------+
-|            Core Config               | |           CadAccess Layer            |
-|       (ElectricalConfig.cs)          | |  (CadDatabaseHelper, SheetFrameHelper|
-|  - Tags, Blocks, Ratios, Margins     | |   AttributeHelper, SelectionHelper)  |
-+--------------------------------------+ +------------------+-------------------+
-                                                            |
-                                                            v
-                                         +--------------------------------------+
-                                         |         AutoCAD Database / ARX       |
-                                         |       (ModelSpace, Transactions,     |
-                                         |        BlockReferences, Attributes)  |
-                                         +--------------------------------------+
+   +-----------------------------------------------------------------------------------+
+   |                                 GIAO DIỆN NGƯỜI DÙNG                              |
+   |                                                                                   |
+   |   [Command Line Prompts]         [WPF Views - XAML Dark Glassmorphism]            |
+   |   (Editor.GetSelection, etc.)    (AutoNumberingWindow, ToolInfoWindow)            |
+   +----------------+-----------------------------------+------------------------------+
+                    |                                   | Data Binding & ICommand
+                    v                                   v
+   +--------------------------------+   +----------------------------------------------+
+   |      Lớp Điều khiển Lệnh       |   |                 Lớp ViewModel                |
+   |    (Commands / Controllers)    |   |     (AutoNumberingViewModel, ToolInfoVM)     |
+   |  CrossRefCommands,             |   | - State management, Live preview formatting  |
+   |  DraftingCommands, etc.        |   | - Kế thừa ViewModelBase (INotifyProperty)    |
+   +----------------+---------------+   +-----------------------+----------------------+
+                    |                                           | Gọi thực thi CAD
+                    |                                           v
+                    |                   +----------------------------------------------+
+                    |                   |            Lớp Dịch vụ (Service Layer)       |
+                    |                   |     (ICadInteractionService / CadService)    |
+                    |                   | - Document locking & StartUserInteraction    |
+                    |                   | - Selection, Picking & Batch Attribute Edits |
+                    |                   +-----------------------+----------------------+
+                    |                                           |
+                    +--------------------+----------------------+
+                                         |
+                                         v
+   +-------------------------------------+---------------------------------------------+
+   |                           Lớp Tương tác CAD (CadAccess)                           |
+   |  CadDatabaseHelper   |   SheetFrameHelper   |   AttributeHelper   |  TableHelper  |
+   |  (RunTransaction)    |   (Grid Coordinate)  |   (Safe Upgrades)   |  (Native Table|
+   +-------------------------------------+---------------------------------------------+
+                                         |
+                                         v
+   +-----------------------------------------------------------------------------------+
+   |                             AutoCAD Database / ARX Runtime                        |
+   |                  (Database, ModelSpace, Transactions, BlockReferences)            |
+   +-----------------------------------------------------------------------------------+
 ```
 
 ---
@@ -100,14 +110,115 @@ Tài liệu này mô tả chi tiết kiến trúc kỹ thuật, mô hình dữ l
 
 ---
 
-### 2.3. Luồng Lệnh `DSTTKBT`: Đánh số thứ tự khung tên bản vẽ qua UI
+### 2.3. Luồng Lệnh `DSTTKBT`, `DSTT`, `DOIATT`: Đánh số thứ tự & Đổi thuộc tính qua WPF MVVM UI
 
-1. **Hiển thị Modal Form (`SheetNumberingForm`):**
-   - Người dùng cài đặt: Tiền tố (Prefix), Hậu tố (Suffix), Số bắt đầu (StartNumber), Kiểu số (`1, 2, 3`, `01, 02`, `001`, `A, B, C`), Hướng quét (Trên xuống dưới, Dưới lên trên, Trái qua phải, Phải qua trái, hoặc theo thứ tự chọn).
-   - Chế độ trang: Ghi dạng trang hiện tại/tổng trang (`12/24`), Tag số trang (`A00`), Tag tổng trang (`TSHEET`).
-2. **Quét chọn & Sắp xếp:**
-   - Người dùng quét chọn các block khung tên trên bản vẽ.
-   - Plugin sắp xếp danh sách block theo hướng đã chọn.
-3. **Ghi số trang:**
-   - Ghi giá trị số trang vào tag `A00`.
-   - Ghi tổng số trang vào tag `TSHEET`.
+Cả 3 lệnh đều tích hợp vào cửa sổ WPF hiện đại [`AutoNumberingWindow`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml) với 3 tab chức năng:
+
+1. **Tab 1: STT Khung tên (`DSTTKBT`):**
+   - Người dùng cài đặt: Tiền tố (Prefix), Hậu tố (Suffix), Số bắt đầu (From), Kiểu số (`1, 2, 3`, `A, B, C`, `I, II, III`), 2 chữ số (`01`), Hướng quét (4 hướng trực giao).
+   - Chế độ trang: Ghi dạng trang hiện tại/tổng trang (`12/24`), Tag số trang (`A00`), Tag tổng trang (`TSHEET`), tự động đếm tổng số trang trong vùng chọn hoặc nhập tay.
+   - Nhấn `⚡ QUÉT CHỌN & ÁP DỤNG`: Ẩn tạm thời dialog (`StartUserInteraction`), người dùng quét chọn các khung tên trên CAD, tự động sắp xếp tọa độ và ghi số trang trong một Transaction an toàn.
+
+2. **Tab 2: STT Block Attribute & Text (`DSTT`):**
+   - Đánh số tăng dần cho chân cầu đấu, rơ-le, thiết bị (ví dụ `DI.01`, `DI.02`... hoặc `TB1-1`, `TB1-2`...).
+   - Hỗ trợ nút `🎯 Chọn TAG`: Click trực tiếp vào Block hoặc Text trên CAD để tự động nhận diện Block Name và Attribute TAG gần nhất.
+   - Hỗ trợ 2 chế độ:
+     - `⚡ Quét chọn hàng loạt`: Áp dụng theo thứ tự hướng quét đã chọn.
+     - `👆 Click từng cái`: Click liên tiếp trên CAD, mỗi lần click tự động gán giá trị tăng dần và hiển thị thông báo ngay tại con trỏ.
+
+3. **Tab 3: Đổi Attribute hàng loạt (`DOIATT` / `DATTR`):**
+   - Nhấn `🎯 Chọn Block mẫu trên CAD`: Click vào một block bất kỳ (ví dụ: `COIL`), nạp toàn bộ danh sách TAG vào ComboBox (`TERM01`, `TERM02`, `NAME`, `MODEL`...) kèm giá trị hiện tại.
+   - Hỗ trợ 2 chế độ đổi:
+     - **Gán giá trị mới trực tiếp**: Ghi đè toàn bộ giá trị cho tag được chọn.
+     - **Tìm & Thay thế chuỗi**: Tìm chuỗi con và thay thế bằng chuỗi mới (hỗ trợ tùy chọn phân biệt chữ hoa/thường).
+   - Hỗ trợ cả quét chọn vùng hoặc click từng đối tượng.
+
+---
+
+## 3. Kiến Trúc WPF UI Hiện Đại & Mô Hình MVVM Chuẩn
+
+Hệ thống UI được tái cấu trúc toàn diện theo mô hình **MVVM (Model-View-ViewModel)** chuẩn của ứng dụng chuyên nghiệp:
+
+```
+[View (XAML)]  <==== DataBinding / ICommand ====>  [ViewModel]  <==== Calls ====>  [CadInteractionService]  <==== Uses ====>  [AutoCAD Database / Editor]
+```
+
+### 3.1. Các Thành phần Kiến trúc
+
+1. **Lớp Hạ tầng MVVM (`UI/Mvvm/`):**
+   - [`ViewModelBase`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Mvvm/ViewModelBase.cs): Cài đặt `INotifyPropertyChanged` với phương thức tiện ích `SetProperty<T>()`, tự động kiểm tra giá trị và kích hoạt thông báo thay đổi giao diện.
+   - [`RelayCommand`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Mvvm/RelayCommand.cs): Cài đặt `ICommand` hỗ trợ cả hành động không tham số và có tham số, tự động lắng nghe `CommandManager.RequerySuggested` để cập nhật trạng thái kích hoạt nút bấm.
+
+2. **Lớp Dịch vụ Tương tác CAD (`UI/Services/`):**
+   - [`ICadInteractionService`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Services/ICadInteractionService.cs): Định nghĩa hợp đồng trừu tượng cho tất cả tương tác người dùng trên bản vẽ:
+     - `PickBlock(...)`: Chọn đối tượng đơn lẻ và trích xuất thông tin tag/text.
+     - `NumberFrames(...)`: Quét và đánh số khung tên bản vẽ.
+     - `NumberBlockAttributes(...)`: Đánh số hàng loạt block attribute hoặc text.
+     - `NumberOneByOne(...)`: Đánh số click từng đối tượng theo thứ tự.
+     - `BatchEditAttributes(...)` / `BatchEditOneByOne(...)`: Đổi thuộc tính hàng loạt.
+   - [`CadInteractionService`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Services/CadInteractionService.cs): Triển khai thực tế sử dụng `ed.StartUserInteraction(window)`, `doc.LockDocument()`, và `CadDatabaseHelper.RunTransaction(...)`. Xử lý an toàn khi người dùng hủy bỏ (Esc).
+
+3. **Lớp ViewModel (`UI/ViewModels/`):**
+   - [`AutoNumberingViewModel`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/ViewModels/AutoNumberingViewModel.cs): Quản lý toàn bộ dữ liệu nhập, tính toán xem trước (Live Previews) theo thời gian thực (ví dụ: xem trước số trang `01 /24`, chuỗi thay thế, số La Mã), và các Command thực thi.
+   - [`ToolInfoViewModel`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/ViewModels/ToolInfoViewModel.cs): Quản lý tìm kiếm nhanh lệnh, lọc theo nhóm danh mục, thực thi lệnh trực tiếp (`SendStringToExecute`), và sao chép mã lệnh vào Clipboard.
+
+4. **Lớp View (`UI/Views/`):**
+   - [`AutoNumberingWindow.xaml`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml) & [`ToolInfoWindow.xaml`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/ToolInfoWindow.xaml):
+     - Giao diện Dark Theme cao cấp (`#0F1117`, `#1A1D27`, `#2A2D3A`).
+     - Hiệu ứng đổ bóng mờ Glassmorphism, bo góc hiện đại, viền phát sáng nhẹ khi hover/focus.
+     - Code-behind mỏng tối đa (Thin Code-Behind): chỉ chịu trách nhiệm khởi tạo `InitializeComponent()` và gán `DataContext = ViewModel`.
+
+### 3.2. Thành Phần Giao Diện Đặc Trưng (UI Design Elements)
+
+1. **Custom Dark ComboBox (`ModernDarkComboBox`):**
+   - Thay thế toàn bộ popup trắng mặc định của Windows bằng popup nền tối (`#161924`), viền bo góc tròn (`CornerRadius="6"`, `#2E364A`) kèm đổ bóng `DropShadowEffect`.
+   - Các item (`ComboBoxItem`) có chiều cao chuẩn 30px, hiệu ứng hover xám xanh `#252D40`, chữ trắng sáng `#FFFFFF`, và khi được chọn viền xanh `#3B82F6` nổi bật.
+   - Nút Chevron Arrow dạng vector nét thanh (`Stroke="#94A3B8"` chuyển `#38BDF8` khi hover).
+   - Loại bỏ hoàn toàn viền nét đứt (focus dotted box) thô của Windows.
+
+2. **Slim Minimalist ScrollBar (Thanh cuộn siêu mỏng):**
+   - Độ rộng siêu mỏng **7px** (thay thế thanh cuộn 18px thô kệch mặc định).
+   - Loại bỏ hoàn toàn 2 nút mũi tên lên/xuống ở hai đầu thanh cuộn.
+   - Rãnh trượt trong suốt (`Transparent`), không chiếm không gian hiển thị.
+   - Con nhộng trượt (`Thumb`) bo tròn mềm mại (`CornerRadius="3"`), màu `#333C52`, sáng dần khi rê chuột (`#64748B`) và chuyển màu accent (`#818CF8`) khi kéo thả.
+
+3. **Công cụ Kiểm Thử UI Độc Lập (`CadElectricalToolkit.UiRunner`):**
+   - Ứng dụng WPF độc lập cho phép xem trước, thử nghiệm và tinh chỉnh giao diện người dùng mà không cần mở AutoCAD hay tải assembly vào tiến trình CAD.
+
+---
+
+## 4. Bảng Tổng Hợp 28 Lệnh Điều Khiển Của Plugin
+
+| Phân hệ | Lệnh CAD | Phương thức xử lý | Class điều khiển | Giao diện |
+| :--- | :--- | :--- | :--- | :--- |
+| **Tra cứu** | `ELECINFO` / `TT` | `ShowToolInfo()` | `AboutCommands` | WPF `ToolInfoWindow` |
+| | `TAOBLOCKMAU` | `CreateSampleBlocksCommand()` | `AboutCommands` | Command Line / Console |
+| **Đánh số** | `DSTTKBT` | `SheetNumberingWithUI()` | `CrossRefCommands` | WPF `AutoNumberingWindow` (Tab 1) |
+| | `DSTT` | `AutoNumbering()` | `DraftingCommands` | WPF `AutoNumberingWindow` (Tab 2) |
+| | `DOIATT` / `DATTR` | `BatchChangeAttribute()` | `DraftingCommands` | WPF `AutoNumberingWindow` (Tab 3) |
+| **Relay CRL** | `TCCTB` | `CrossReferenceRelay()` | `CrossRefCommands` | Command Line / Console |
+| | `TKCRL` | `RelayTableCommand()` | `CrossRefCommands` | Mouse Jig & Console |
+| | `SYNCRL` | `SyncRelayAddressCommand()` | `CrossRefCommands` | Command Line / Console |
+| | `KTCRL` | `CheckRelayErrorsCommand()` | `CrossRefCommands` | Command Line / Console |
+| **Truy vết** | `TIMTRANG` / `TRACE` | `TraceLinkCommand()` | `TraceCommands` | Command Line / Interactive |
+| | `XOALINK` | `ClearTraceLinksCommand()` | `TraceCommands` | Command Line |
+| **Khung tên** | `TKDMBV` | `SheetIndexCommand()` | `SheetCommands` | AutoCAD Native Table |
+| | `SYNREV` | `SyncRevisionCommand()` | `SheetCommands` | Command Line |
+| | `SYNTF` | `SyncToFromCommand()` | `SheetCommands` | Command Line |
+| | `GBV` | `GroupSheetsCommand()` | `SheetCommands` | Command Line |
+| | `TBV` | `SplitSheetsCommand()` | `SheetCommands` | Command Line |
+| **Dây & Cầu đấu** | `INSGEN` | `InsertWireNumberCommand()` | `WireNumberCommands` | Command Line & Jig |
+| | `TKGEN` | `ExportWireNumberListCommand()` | `WireNumberCommands` | AutoCAD Table / CSV |
+| | `SYNGEN` | `SyncWireNumberCommand()` | `WireNumberCommands` | Command Line |
+| | `TKCD` | `ExportTerminalListCommand()` | `TerminalCommands` | AutoCAD Native Table |
+| | `SYNCD` | `SyncTerminalNumbersCommand()` | `TerminalCommands` | Command Line |
+| **PLC I/O** | `TKPLCIN` | `ExportPlcInputCommand()` | `PlcCommands` | AutoCAD Native Table |
+| | `TKPLCOUT` | `ExportPlcOutputCommand()` | `PlcCommands` | AutoCAD Native Table |
+| | `SYNPLC` | `SyncPlcAddressesCommand()` | `PlcCommands` | Command Line |
+| **Soạn thảo** | `CDN` | `QuickDimensionSum()` | `DraftingCommands` | Clipboard / Console |
+| | `GTD` | `AlignTextVertical()` | `DraftingCommands` | Command Line |
+| | `GTN` | `AlignTextHorizontal()` | `DraftingCommands` | Command Line |
+| | `CAD2EXCEL` | `ExportCadToExcelCommand()` | `BomCommands` | File Dialog / CSV |
+| | `TKDMTB` | `ExportBomListCommand()` | `BomCommands` | AutoCAD Table / CSV |
+
+
