@@ -33,7 +33,7 @@
                                 <Setter TargetName="thumbBorder" Property="Background" Value="#64748B"/>
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="thumbBorder" Property="Background" Value="#818CF8"/>
+                                <Setter TargetName="thumbBorder" Property="Background" Value="#38BDF8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -148,7 +148,7 @@
 
         <!-- Modern Primary Button (Run) -->
         <Style x:Key="RunButton" TargetType="Button">
-            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontSize" Value="11.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -166,10 +166,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#0965f9"/>
+                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#0965f9"/>
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -126,7 +126,7 @@
                                 <Setter TargetName="thumbBorder" Property="Background" Value="#64748B"/>
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="thumbBorder" Property="Background" Value="#818CF8"/>
+                                <Setter TargetName="thumbBorder" Property="Background" Value="#38BDF8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -384,7 +384,7 @@
 
         <!-- Primary Action Button -->
         <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#4F46E5"/>
+            <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="12"/>
@@ -400,10 +400,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#4338CA"/>
+                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3730A3"/>
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.5"/>
@@ -476,6 +476,16 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Modern Tech Blue Preview Panel -->
+        <Style x:Key="PreviewPanel" TargetType="Border">
+            <Setter Property="Background" Value="#0B1A2F"/>
+            <Setter Property="BorderBrush" Value="#1D4ED8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -493,7 +503,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Border Background="#4F46E5" CornerRadius="6" Width="34" Height="34" Margin="0,0,12,0">
+                <Border Background="#2563EB" CornerRadius="6" Width="34" Height="34" Margin="0,0,12,0">
                     <TextBlock Text="AN" Foreground="White" FontWeight="Bold" FontSize="15" 
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
@@ -557,10 +567,10 @@
                                 </Grid>
 
                                 <!-- Preview Badge -->
-                                <Border Background="#1C1027" BorderBrush="#7C3AED" BorderThickness="1" CornerRadius="5" Padding="10,6" Margin="0,4,0,0">
+                                <Border Style="{StaticResource PreviewPanel}">
                                     <DockPanel>
-                                        <TextBlock Text="Preview: " FontWeight="SemiBold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding FramePreview}" FontWeight="Bold" FontSize="15" Foreground="#F87171" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding FramePreview}" FontWeight="Bold" FontSize="14.5" Foreground="#38BDF8" VerticalAlignment="Center"/>
                                     </DockPanel>
                                 </Border>
                             </StackPanel>
@@ -581,7 +591,7 @@
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="14,0,0,0">
                                         <TextBlock Text="Tag:" Style="{StaticResource FieldLabel}" Margin="0,0,4,0"/>
                                         <TextBox Text="{Binding FrameTotalPagesTag, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Width="60" FontWeight="Bold" Foreground="#4ADE80"/>
+                                                 Width="60" FontWeight="Bold" Foreground="#38BDF8"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
                                         <TextBlock Text="Ký tự:" Style="{StaticResource FieldLabel}" Margin="0,0,4,0"/>
@@ -605,7 +615,7 @@
                                 </Grid>
 
                                 <TextBlock Text="{Binding FramePagePreview}" FontStyle="Italic" FontSize="11" 
-                                           Foreground="#4ADE80" Margin="0,4,0,0"/>
+                                           Foreground="#38BDF8" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
 
@@ -620,7 +630,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Block name:" Style="{StaticResource FieldLabel}"/>
                                     <TextBox Grid.Column="1" Text="{Binding FrameBlockName, UpdateSourceTrigger=PropertyChanged}" 
-                                             FontWeight="Bold" Foreground="#F87171"/>
+                                             FontWeight="Bold" Foreground="#38BDF8"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
@@ -630,7 +640,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Attribute TAG:" Style="{StaticResource FieldLabel}"/>
                                     <TextBox Grid.Column="1" Text="{Binding FrameAttrTag, UpdateSourceTrigger=PropertyChanged}" 
-                                             FontWeight="Bold" Foreground="#F87171"/>
+                                             FontWeight="Bold" Foreground="#38BDF8"/>
                                     <Button Grid.Column="2" Width="85" Content="🎯 Chọn TAG" 
                                              Style="{StaticResource SecondaryButton}" Margin="6,0,0,0"
                                              Command="{Binding FrameChooseTagCommand}"/>
@@ -716,10 +726,10 @@
                                 </Grid>
 
                                 <!-- Preview Badge -->
-                                <Border Background="#1C1027" BorderBrush="#7C3AED" BorderThickness="1" CornerRadius="5" Padding="10,6" Margin="0,4,0,0">
+                                <Border Style="{StaticResource PreviewPanel}">
                                     <DockPanel>
-                                        <TextBlock Text="Preview: " FontWeight="SemiBold" Foreground="#CBD5E1" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding AttrPreview}" FontWeight="Bold" FontSize="15" Foreground="#F87171" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding AttrPreview}" FontWeight="Bold" FontSize="14.5" Foreground="#38BDF8" VerticalAlignment="Center"/>
                                     </DockPanel>
                                 </Border>
                             </StackPanel>
@@ -746,7 +756,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="Attribute TAG:" Style="{StaticResource FieldLabel}"/>
                                     <TextBox Grid.Column="1" Text="{Binding AttrTagName, UpdateSourceTrigger=PropertyChanged}" 
-                                             FontWeight="Bold" Foreground="#F87171"/>
+                                             FontWeight="Bold" Foreground="#38BDF8"/>
                                     <Button Grid.Column="2" Width="85" Content="🎯 Chọn TAG" 
                                              Style="{StaticResource SecondaryButton}" Margin="6,0,0,0"
                                              Command="{Binding AttrChooseTagCommand}"/>
@@ -907,11 +917,11 @@
                                 </StackPanel>
 
                                 <!-- Preview -->
-                                <Border Background="#0D2818" BorderBrush="#22C55E" BorderThickness="1" CornerRadius="5" Padding="10,6" Margin="0,4,0,0">
+                                <Border Style="{StaticResource PreviewPanel}">
                                     <DockPanel>
-                                        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#86EFAC" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding BatchPreview}" FontWeight="Bold" FontSize="12.5" 
-                                                   Foreground="#4ADE80" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                   Foreground="#38BDF8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     </DockPanel>
                                 </Border>
                             </StackPanel>

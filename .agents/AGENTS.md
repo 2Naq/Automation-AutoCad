@@ -227,7 +227,7 @@ sequenceDiagram
 
 ### 5.5. Modern WPF & MVVM Architecture Pattern
 All plugin UI dialogs follow a clean, decoupled **MVVM (Model-View-ViewModel)** architecture:
-- **View (`src/CadElectricalToolkit/UI/Views/`):** Pure XAML with thin code-behind. Uses a modern dark theme (`#0F1117`, `#1A1D27`), subtle glassmorphism drop shadows, rounded corners, accent gradients (`#3B82F6` to `#8B5CF6`), and clear visual hierarchy. Zero business logic in code-behind; all events bind via `ICommand` and `{Binding}`.
+- **View (`src/CadElectricalToolkit/UI/Views/`):** Pure XAML with thin code-behind. Uses a modern dark theme (`#0F1117`, `#181B26`), cohesive Tech Blue accents (`#2563EB`, `#3B82F6`, `#38BDF8`), subtle drop shadows, rounded corners, and clear visual hierarchy (see [Section 7](#7-ui-design-system--styling-standards-chuẩn-hóa-giao-diện-wpf---tech-blue)). Zero business logic in code-behind; all events bind via `ICommand` and `{Binding}`.
 - **ViewModel (`src/CadElectricalToolkit/UI/ViewModels/`):** Inherits from `ViewModelBase` (`INotifyPropertyChanged`). Manages form state, live preview calculations, and commands (`RelayCommand`). Does **not** access AutoCAD databases directly.
 - **Service Layer (`src/CadElectricalToolkit/UI/Services/`):** Implements `ICadInteractionService` / `CadInteractionService`. Encapsulates all AutoCAD Editor prompts (`ed.GetSelection`, `ed.GetPoint`), document locking (`ed.Document.LockDocument()`), and `StartUserInteraction` calls. ViewModels receive `ICadInteractionService` via dependency injection, allowing easy unit testing without active AutoCAD sessions.
 
@@ -254,3 +254,172 @@ The project file contains a post-build target `<Target Name="CopyToBundle" After
 3. Browse to:
    - `f:\1.Project\1.C_shard\C_AutoCad\bundle\CadElectricalToolkit.bundle\Contents\net48\CadElectricalToolkit.dll` (or `bin\Release\CadElectricalToolkit.dll`)
 4. Verify by running `ELECINFO` or `TT`.
+
+---
+
+## 7. UI Design System & Styling Standards (Chuẩn Hóa Giao Diện WPF - Tech Blue)
+
+Để đảm bảo tất cả các cửa sổ, dialog và control mới trong dự án đều **100% đồng nhất về mặt UI / UX**, mọi AI Agent và kỹ sư phần mềm khi thêm hoặc sửa giao diện XAML **BẮT BUỘC** tuân thủ các quy chuẩn sau:
+
+### 7.1. Bảng Màu Chuẩn (Tech Blue Dark Theme Tokens)
+
+| Thành phần | Token Hex | Ý nghĩa & Vị trí sử dụng |
+| :--- | :--- | :--- |
+| **Window Background** | `#0F1117` | Màu nền tối chính của cửa sổ (`Window.Background`). |
+| **Header Bar** | `#141722` | Nền thanh tiêu đề header trên cùng (viền dưới `#1F2433`). |
+| **Footer Bar** | `#111318` | Nền thanh điều hướng/chân trang footer (viền trên `#1F2433`). |
+| **Card / Group Panel** | `#181B26` | Nền các khối group (`Border.Style="{StaticResource CardPanel}"`), viền `#2B3245`, `CornerRadius="8"`. |
+| **Input Background** | `#12151E` | Nền mặc định cho `TextBox`, `ComboBox`. Viền `#2B3245`, `CornerRadius="5"`. |
+| **Input Focus / Active** | `#161825` | Nền khi `IsFocused="True"`, viền phát sáng `#3B82F6`. |
+| **Primary Button (Default)** | `#2563EB` | Nền nút chính (`PrimaryButton`, `RunButton`). Chữ trắng `#FFFFFF`, `FontWeight="Bold"`. |
+| **Primary Button (Hover)** | `#3B82F6` | Nền nút chính khi rê chuột (`IsMouseOver="True"`), hiệu ứng sáng rực công nghệ. |
+| **Primary Button (Pressed)**| `#1D4ED8` | Nền nút chính khi bấm giữ (`IsPressed="True"`). |
+| **Secondary Button** | `#1E2230` | Nền nút phụ (`SecondaryButton`), viền `#2E354A`. Hover đổi viền sang `#3B82F6`. |
+| **Preview Panel Background**| `#0B1A2F` | Nền khung xem trước (`PreviewPanel`), viền xanh `#1D4ED8`, `CornerRadius="6"`. |
+| **Preview Label Text** | `#93C5FD` | Chữ nhãn "Xem trước:" trong khung preview (`FontWeight="SemiBold"`). |
+| **Preview & Active Accent** | `#38BDF8` | Màu chữ giá trị xem trước, TAG block mục tiêu (`BatchAttrTag`, `FrameAttrTag`), và con trỏ `CaretBrush`. |
+| **Success Status** | `#4ADE80` | Màu chữ thông báo trạng thái thành công (`BatchStatus`, `FrameStatus`). |
+| **Error / Alert** | `#F87171` | Chỉ sử dụng cho thông báo lỗi hoặc cảnh báo xóa nguy hiểm, **KHÔNG** dùng làm màu chữ nhập liệu thông thường. |
+| **Field Label Text** | `#94A3B8` | Màu chữ các nhãn mô tả (`FieldLabel`), `FontSize="11.5"`. |
+| **Muted / Tip Text** | `#64748B` | Màu chữ gợi ý footer hoặc mô tả phụ. |
+| **Scrollbar Thumb Drag** | `#38BDF8` | Màu con trượt khi người dùng đang kéo thanh cuộn. |
+
+### 7.2. Chuẩn Resource Styles (XAML Resource Standards)
+
+Mỗi cửa sổ WPF (`Window.Resources`) phải định nghĩa hoặc tái sử dụng các Style chuẩn sau:
+
+#### 1. Khung Xem Trước Chuẩn (`PreviewPanel`)
+```xaml
+<!-- Modern Tech Blue Preview Panel -->
+<Style x:Key="PreviewPanel" TargetType="Border">
+    <Setter Property="Background" Value="#0B1A2F"/>
+    <Setter Property="BorderBrush" Value="#1D4ED8"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+</Style>
+```
+*Cách áp dụng trong XAML:*
+```xaml
+<Border Style="{StaticResource PreviewPanel}">
+    <DockPanel>
+        <TextBlock Text="Xem trước: " FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding PreviewProperty}" FontWeight="Bold" FontSize="13" 
+                   Foreground="#38BDF8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+    </DockPanel>
+</Border>
+```
+
+#### 2. Nút Bấm Chính (`PrimaryButton`)
+```xaml
+<!-- Primary Action Button -->
+<Style x:Key="PrimaryButton" TargetType="Button">
+    <Setter Property="Background" Value="#2563EB"/>
+    <Setter Property="Foreground" Value="#FFFFFF"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="14,0"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+#### 3. Nút Bấm Phụ (`SecondaryButton`)
+```xaml
+<!-- Secondary Action Button -->
+<Style x:Key="SecondaryButton" TargetType="Button">
+    <Setter Property="Background" Value="#1E2230"/>
+    <Setter Property="Foreground" Value="#E2E8F0"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="Height" Value="29"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="BorderBrush" Value="#2E354A"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Border x:Name="border" Background="{TemplateBinding Background}" 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="#282F42"/>
+                        <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="#161B28"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+#### 4. Tab Điều Hướng (`TabItem`)
+```xaml
+<Style TargetType="TabItem">
+    <Setter Property="Foreground" Value="#94A3B8"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="TabItem">
+                <Border x:Name="tabBorder" Background="#12151E" Padding="14,8" 
+                        CornerRadius="6" Margin="0,0,4,0" BorderBrush="#252B3B" BorderThickness="1">
+                    <ContentPresenter ContentSource="Header" HorizontalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter TargetName="tabBorder" Property="Background" Value="#1E293B"/>
+                        <Setter TargetName="tabBorder" Property="BorderBrush" Value="#3B82F6"/>
+                        <Setter Property="Foreground" Value="#38BDF8"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="tabBorder" Property="Background" Value="#252D40"/>
+                        <Setter Property="Foreground" Value="#F1F5F9"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+### 7.4. Những Điều Cấm Kỵ & Khuyến Nghị (Do's and Don'ts)
+
+- ❌ **KHÔNG** dùng các màu tím/indigo lạc quẻ (`#4F46E5`, `#7C3AED`, `#818CF8`) hoặc màu xanh lá cũ (`#0D2818`) làm màu nền cho button hay khung preview.
+- ❌ **KHÔNG** dùng màu đỏ (`#F87171`) cho các ô nhập Attribute TAG hoặc tên block mục tiêu khi đang ở trạng thái bình thường (khiến người dùng nhầm là lỗi validation). Màu đỏ CHỈ dùng khi có lỗi thật sự hoặc nút hành động xóa nguy hiểm.
+- ❌ **KHÔNG** hardcode trực tiếp màu sắc cục bộ ở từng thẻ `Border`, `Button` nếu có thể dùng Style chuẩn (`PreviewPanel`, `PrimaryButton`, `SecondaryButton`, `CardPanel`).
+- ❌ **KHÔNG** viết logic nghiệp vụ vào Code-Behind (`.xaml.cs`). Toàn bộ luồng CAD và dữ liệu phải được bọc trong ViewModel và `ICadInteractionService`.
+- ✅ **LUÔN LUÔN** dùng `#38BDF8` cho con trỏ nhập liệu (`CaretBrush`), giá trị xem trước (`PreviewText`), và các thông số kỹ thuật nổi bật trên nền tối.
+- ✅ **LUÔN LUÔN** giữ padding, corner radius và typography nhất quán (`Segoe UI`, title bold, label semibold, status 11pt).
+
