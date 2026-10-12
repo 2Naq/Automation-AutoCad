@@ -178,6 +178,44 @@ namespace CadElectricalToolkit.UI.Services
         bool ConnectTwoArrowsManually(
             System.Windows.Window ownerWindow,
             WireArrowSyncOptions options);
+
+        /// <summary>
+        /// Quét tất cả khung bản vẽ trong ModelSpace để in
+        /// </summary>
+        List<CadAccess.PlotSheetItem> ScanAllFramesForPlotting();
+
+        /// <summary>
+        /// Cho người dùng quét chọn khung bản vẽ trên CAD để in
+        /// </summary>
+        List<CadAccess.PlotSheetItem>? PickFramesForPlotting(System.Windows.Window ownerWindow);
+
+        /// <summary>
+        /// Lấy danh sách máy in / plotter
+        /// </summary>
+        List<string> GetAvailablePlotDevices();
+
+        /// <summary>
+        /// Lấy danh sách khổ giấy cho một máy in
+        /// </summary>
+        List<string> GetMediaNamesForDevice(string deviceName);
+
+        /// <summary>
+        /// Lấy danh sách bảng nét in CTB
+        /// </summary>
+        List<string> GetAvailableStyleSheets();
+
+        /// <summary>
+        /// Lấy đường dẫn file PDF mặc định dựa theo tên bản vẽ hiện hành
+        /// </summary>
+        string GetDefaultOutputPdfPath();
+
+        /// <summary>
+        /// Thực thi in hàng loạt các bản vẽ ra file PDF
+        /// </summary>
+        CadAccess.BatchPlotResult ExecuteBatchPlot(
+            List<CadAccess.PlotSheetItem> sheets,
+            CadAccess.BatchPlotOptions options,
+            IProgress<CadAccess.PlotProgressReport>? progress = null);
     }
 
     /// <summary>

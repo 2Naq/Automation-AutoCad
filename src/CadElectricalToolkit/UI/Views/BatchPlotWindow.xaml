@@ -1,0 +1,798 @@
+<Window x:Class="CadElectricalToolkit.UI.Views.BatchPlotWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="In Hàng Loạt &amp; Xuất PDF Thông Minh - CadElectricalToolkit"
+        Width="1080" Height="730"
+        MinWidth="960" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Background="#0F1117"
+        Foreground="#E2E8F0"
+        FontFamily="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <!-- Card / Panel Style -->
+        <Style x:Key="CardPanel" TargetType="Border">
+            <Setter Property="Background" Value="#181B26"/>
+            <Setter Property="BorderBrush" Value="#2B3245"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <Style x:Key="SpecialCardPanel" TargetType="Border">
+            <Setter Property="Background" Value="#101B2E"/>
+            <Setter Property="BorderBrush" Value="#2563EB"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- Section Header Text -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#93C5FD"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Field Label -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <!-- Primary Button -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Secondary Button -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#1E2230"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#2E354A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#282E42"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#161825"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Input TextBox -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#12151E"/>
+            <Setter Property="Foreground" Value="#F1F5F9"/>
+            <Setter Property="BorderBrush" Value="#2B3245"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CaretBrush" Value="#38BDF8"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="Background" Value="#161825"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- CheckBox & RadioButton Dark Theme -->
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,3,0,3"/>
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,3,0,3"/>
+        </Style>
+
+        <!-- ═══════════════ SLIM MODERN DARK SCROLLBAR ═══════════════ -->
+
+        <!-- ScrollBar Thumb Style -->
+        <Style x:Key="ModernScrollBarThumb" TargetType="Thumb">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="thumbBorder"
+                                Background="#333C52"
+                                CornerRadius="3"
+                                Margin="1,0,1,0"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="thumbBorder" Property="Background" Value="#64748B"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="thumbBorder" Property="Background" Value="#38BDF8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Transparent Page Button for ScrollTrack -->
+        <Style x:Key="ModernScrollBarPageButton" TargetType="RepeatButton">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Rectangle Fill="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Default Slim Modern ScrollBar Style -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Vertical">
+                    <Setter Property="Width" Value="7"/>
+                    <Setter Property="MinWidth" Value="7"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="Transparent">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ModernScrollBarPageButton}" Command="{x:Static ScrollBar.PageUpCommand}"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ModernScrollBarPageButton}" Command="{x:Static ScrollBar.PageDownCommand}"/>
+                                        </Track.IncreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource ModernScrollBarThumb}"/>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="7"/>
+                    <Setter Property="MinHeight" Value="7"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="Transparent">
+                                    <Track x:Name="PART_Track">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ModernScrollBarPageButton}" Command="{x:Static ScrollBar.PageLeftCommand}"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource ModernScrollBarPageButton}" Command="{x:Static ScrollBar.PageRightCommand}"/>
+                                        </Track.IncreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource ModernScrollBarThumb}"/>
+                                        </Track.Thumb>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ═══════════════ MODERN DARK COMBOBOX ═══════════════ -->
+
+        <!-- ComboBoxItem Style -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="itemBorder"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Padding="10,0"
+                                Margin="2,1">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="itemBorder" Property="Background" Value="#252D40"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="itemBorder" Property="Background" Value="#1E293B"/>
+                                <Setter TargetName="itemBorder" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="itemBorder" Property="BorderThickness" Value="1"/>
+                                <Setter Property="Foreground" Value="#38BDF8"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle Button Template for ComboBox -->
+        <ControlTemplate x:Key="ComboBoxToggleButtonTemplate" TargetType="ToggleButton">
+            <Border x:Name="toggleBorder"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="5"
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="28"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="1" Background="Transparent">
+                        <Path x:Name="arrow"
+                              Data="M 1 1.5 L 4.5 5 L 8 1.5"
+                              Stroke="#94A3B8"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="toggleBorder" Property="BorderBrush" Value="#3B82F6"/>
+                    <Setter TargetName="toggleBorder" Property="Background" Value="#161825"/>
+                    <Setter TargetName="arrow" Property="Stroke" Value="#38BDF8"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="toggleBorder" Property="BorderBrush" Value="#3B82F6"/>
+                    <Setter TargetName="arrow" Property="Stroke" Value="#38BDF8"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="toggleBorder" Property="Opacity" Value="0.5"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- Modern ComboBox Default Style -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#F1F5F9"/>
+            <Setter Property="Background" Value="#12151E"/>
+            <Setter Property="BorderBrush" Value="#2B3245"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="MaxDropDownHeight" Value="280"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
+                            <ToggleButton x:Name="ToggleButton"
+                                          Template="{StaticResource ComboBoxToggleButtonTemplate}"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press"/>
+
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="10,0,28,0"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"/>
+
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Style="{x:Null}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="{TemplateBinding Foreground}"
+                                     CaretBrush="#38BDF8"
+                                     FontSize="{TemplateBinding FontSize}"
+                                     FontWeight="{TemplateBinding FontWeight}"
+                                     Margin="8,0,28,0"
+                                     Padding="2,0,0,0"
+                                     VerticalAlignment="Center"
+                                     HorizontalAlignment="Stretch"
+                                     Focusable="True"
+                                     Visibility="Hidden"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"/>
+
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom"
+                                   PopupAnimation="Fade">
+                                <Border x:Name="DropDownBorder"
+                                        MinWidth="{Binding ActualWidth, ElementName=MainGrid}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Background="#161924"
+                                        BorderBrush="#2E364A"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="3"
+                                        Margin="0,3,0,0">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.55" Color="#000000"/>
+                                    </Border.Effect>
+                                    <ScrollViewer x:Name="DropDownScrollViewer" CanContentScroll="True" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter Property="IsTabStop" Value="False"/>
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ═══════════════ DATAGRID DARK STYLING ═══════════════ -->
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#12151E"/>
+            <Setter Property="Foreground" Value="#F1F5F9"/>
+            <Setter Property="BorderBrush" Value="#2B3245"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="GridLinesVisibility" Value="All"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#1F2433"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#1F2433"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="RowHeight" Value="32"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="#151824"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Style.Triggers>
+                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#11131E"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1E2638"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#1E3A8A"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#181D2C"/>
+            <Setter Property="Foreground" Value="#93C5FD"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderBrush" Value="#1F2433"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+        </Style>
+
+        <Style x:Key="CenterHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="LeftHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#1E3A8A"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Cell Text Styles -->
+        <Style x:Key="CenterMutedCell" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="11.5"/>
+        </Style>
+
+        <Style x:Key="SheetNoCell" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#38BDF8"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style x:Key="TitleCell" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#F1F5F9"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="ToolTip" Value="{Binding DrawingTitle}"/>
+            <Setter Property="Margin" Value="4,0"/>
+        </Style>
+
+        <Style x:Key="PaperSizeCell" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#A5B4FC"/>
+            <Setter Property="FontSize" Value="11.5"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER BAR -->
+        <Border Grid.Row="0" Background="#141722" BorderBrush="#1F2433" BorderThickness="0,0,0,1" Padding="18,12">
+            <DockPanel LastChildFill="True">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Border Background="#1E2A4A" CornerRadius="12" Padding="10,4" Margin="0,0,10,0">
+                        <TextBlock Text="⚡ Lệnh: INBV / INPDF" FontSize="11.5" FontWeight="SemiBold" Foreground="#60A5FA"/>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🖨️ " FontSize="18" VerticalAlignment="Center"/>
+                        <TextBlock Text="IN HÀNG LOẠT &amp; XUẤT PDF THÔNG MINH" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        <Border Background="#059669" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="AutoCAD 2021-2026" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="In khung tên ModelSpace ra PDF ghép trang, tự động gắn liên kết nhảy trang hai chiều cho mũi tên To-From." 
+                               FontSize="11.5" Foreground="#94A3B8" Margin="26,2,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- MAIN CONTENT: 2 COLUMNS -->
+        <Grid Grid.Row="1" Margin="14,12,14,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="450"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT COLUMN: DANH SÁCH BẢN VẼ -->
+            <Border Grid.Column="0" Background="#181B26" BorderBrush="#2B3245" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header & Counts -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Border Background="#0F172A" BorderBrush="#1E3A8A" BorderThickness="1" CornerRadius="4" Padding="8,3" DockPanel.Dock="Right">
+                            <TextBlock Text="{Binding SelectedCountText}" FontWeight="Bold" FontSize="11.5" Foreground="#38BDF8"/>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="DANH SÁCH BẢN VẼ CẦN IN" FontSize="12.5" FontWeight="Bold" Foreground="#93C5FD"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- Toolbar Actions -->
+                    <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+                        <Button Content="🔄 Quét lại toàn bộ" Style="{StaticResource SecondaryButton}" Command="{Binding ScanAllCommand}" Margin="0,0,6,6"/>
+                        <Button Content="👆 Quét chọn trên CAD" Style="{StaticResource SecondaryButton}" Command="{Binding PickFramesCommand}" Margin="0,0,6,6"/>
+                        <Button Content="☑ Chọn tất cả" Style="{StaticResource SecondaryButton}" Command="{Binding SelectAllCommand}" Margin="0,0,6,6"/>
+                        <Button Content="☐ Bỏ chọn" Style="{StaticResource SecondaryButton}" Command="{Binding UnselectAllCommand}" Margin="0,0,6,6"/>
+                        <Button Content="🔢 Xếp theo số trang" Style="{StaticResource SecondaryButton}" Command="{Binding SortBySheetNoCommand}" Margin="0,0,6,6"/>
+                        <Button Content="📐 Xếp theo tọa độ X-Y" Style="{StaticResource SecondaryButton}" Command="{Binding SortByCoordCommand}" Margin="0,0,0,6"/>
+                    </WrapPanel>
+
+                    <!-- Sheets DataGrid -->
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Sheets}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Chọn" Width="48" HeaderStyle="{StaticResource CenterHeader}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="STT" Binding="{Binding OrderIndex}" Width="45" IsReadOnly="True"
+                                                HeaderStyle="{StaticResource CenterHeader}"
+                                                ElementStyle="{StaticResource CenterMutedCell}"/>
+
+                            <DataGridTextColumn Header="Số Trang" Binding="{Binding SheetNo}" Width="75" IsReadOnly="True"
+                                                HeaderStyle="{StaticResource CenterHeader}"
+                                                ElementStyle="{StaticResource SheetNoCell}"/>
+
+                            <DataGridTextColumn Header="Tên Bản Vẽ (Title)" Binding="{Binding DrawingTitle}" Width="*" IsReadOnly="True"
+                                                HeaderStyle="{StaticResource LeftHeader}"
+                                                ElementStyle="{StaticResource TitleCell}"/>
+
+                            <DataGridTextColumn Header="Khổ" Binding="{Binding PaperSizeEstimate}" Width="55" IsReadOnly="True"
+                                                HeaderStyle="{StaticResource CenterHeader}"
+                                                ElementStyle="{StaticResource PaperSizeCell}"/>
+
+                            <DataGridTextColumn Header="Kích Thước" Binding="{Binding Dimensions}" Width="105" IsReadOnly="True"
+                                                HeaderStyle="{StaticResource CenterHeader}"
+                                                ElementStyle="{StaticResource CenterMutedCell}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT COLUMN: CẤU HÌNH IN & XUẤT PDF -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <!-- CARD 1: CẤU HÌNH MÁY IN & KHỔ GIẤY -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <StackPanel>
+                            <TextBlock Text="1. MÁY IN &amp; KHỔ GIẤY" Style="{StaticResource SectionHeader}"/>
+
+                            <TextBlock Text="Máy in / Plotter (PDF Driver):" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" Margin="0,0,0,8"/>
+
+                            <TextBlock Text="Khổ giấy (Media Name):" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox ItemsSource="{Binding MediaList}" SelectedItem="{Binding SelectedMedia}" Margin="0,0,0,8"/>
+
+                            <CheckBox Content="Tự động nhận diện khổ A4 / A3 theo từng khung" 
+                                      IsChecked="{Binding AutoMatchMediaSize}"
+                                      ToolTip="Nếu kích thước khung khoảng 297x210 sẽ in A4, nếu 420x297 sẽ in A3."/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 2: KIỂU IN & BẢNG NÉT (CTB) -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <StackPanel>
+                            <TextBlock Text="2. KIỂU IN / BẢNG NÉT (CTB)" Style="{StaticResource SectionHeader}"/>
+
+                            <RadioButton Content="Trắng đen (monochrome.ctb) - Nét in đen chuẩn kỹ thuật" 
+                                         IsChecked="{Binding IsMonochrome}"/>
+
+                            <RadioButton Content="Màu hiện tại (acad.ctb) - Giữ nguyên màu CAD" 
+                                         IsChecked="{Binding IsColor}"/>
+
+                            <RadioButton Content="Tùy chọn file CTB khác:" 
+                                         IsChecked="{Binding IsCustomCtb}"/>
+
+                            <ComboBox ItemsSource="{Binding AvailableStyleSheets}" 
+                                      SelectedItem="{Binding SelectedStyleSheet}" 
+                                      IsEnabled="{Binding IsCustomCtb}"
+                                      Margin="20,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 3: TÙY CHỌN XUẤT FILE -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <StackPanel>
+                            <TextBlock Text="3. TÙY CHỌN XUẤT FILE" Style="{StaticResource SectionHeader}"/>
+
+                            <RadioButton Content="Ghép thành 1 file PDF duy nhất (Multi-page PDF)" 
+                                         IsChecked="{Binding MergeIntoSinglePdf}"/>
+
+                            <RadioButton Content="Xuất từng file PDF riêng lẻ theo từng bản vẽ" 
+                                         IsChecked="{Binding IsIndividualFiles}"/>
+
+                            <!-- Output File (Merged) -->
+                            <StackPanel Visibility="{Binding MergeIntoSinglePdf, Converter={StaticResource BoolToVis}, FallbackValue=Visible}" Margin="0,6,0,0">
+                                <TextBlock Text="File PDF xuất ra:" Style="{StaticResource FieldLabel}"/>
+                                <DockPanel>
+                                    <Button Content="Chọn..." Style="{StaticResource SecondaryButton}" Command="{Binding BrowseOutputFileCommand}" DockPanel.Dock="Right" Margin="6,0,0,0" Height="30"/>
+                                    <TextBox Text="{Binding OutputFilePath, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DockPanel>
+                            </StackPanel>
+
+                            <!-- Output Folder (Individual) -->
+                            <StackPanel Visibility="{Binding IsIndividualFiles, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" Margin="0,6,0,0">
+                                <TextBlock Text="Thư mục lưu các file PDF:" Style="{StaticResource FieldLabel}"/>
+                                <DockPanel>
+                                    <Button Content="Chọn..." Style="{StaticResource SecondaryButton}" Command="{Binding BrowseOutputFolderCommand}" DockPanel.Dock="Right" Margin="6,0,0,0" Height="30"/>
+                                    <TextBox Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DockPanel>
+                            </StackPanel>
+
+                            <CheckBox Content="Tự động mở file/thư mục sau khi in xong" 
+                                      IsChecked="{Binding OpenAfterPlot}"
+                                      Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 4: TÍNH NĂNG ĐẶC BIỆT (SMART HYPERLINKS) -->
+                    <Border Style="{StaticResource SpecialCardPanel}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <Border Background="#1E3A8A" CornerRadius="4" Padding="6,2" DockPanel.Dock="Right">
+                                    <TextBlock Text="PRO FEATURE" FontSize="9.5" FontWeight="Bold" Foreground="#38BDF8"/>
+                                </Border>
+                                <TextBlock Text="🔗 LIÊN KẾT NHẢY TRANG PDF (TO-FROM)" Style="{StaticResource SectionHeader}" Foreground="#60A5FA" Margin="0"/>
+                            </DockPanel>
+
+                            <CheckBox Content="Tạo liên kết nhảy trang khi click vào mũi tên (Interactive Links)" 
+                                      IsChecked="{Binding EnableInteractiveHyperlinks}"
+                                      FontWeight="SemiBold"
+                                      Foreground="#93C5FD"/>
+
+                            <CheckBox Content="Khớp theo nhóm tín hiệu gốc (Bỏ đuôi -RB1, -RB2)" 
+                                      IsChecked="{Binding MatchBaseSignalOnly}"
+                                      IsEnabled="{Binding EnableInteractiveHyperlinks}"
+                                      Margin="20,2,0,6"
+                                      FontSize="11.5"/>
+
+                            <!-- Description tip -->
+                            <Border Background="#0B132B" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,4,0,0">
+                                <TextBlock Text="💡 Khi bật tính năng này, trên file PDF mở bằng Foxit/Acrobat/Edge, nhấp chuột vào mũi tên ở trang nguồn sẽ tự động nhảy đến đúng trang và vị trí của mũi tên đối ứng (và ngược lại)!"
+                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- FOOTER BAR: PROGRESS & ACTIONS -->
+        <Border Grid.Row="2" Background="#111318" BorderBrush="#1F2433" BorderThickness="0,1,0,0" Padding="18,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status & Progress -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0">
+                    <DockPanel LastChildFill="True" Margin="0,0,0,4">
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="11.5" Foreground="#CBD5E1" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding ProgressStatus}" FontSize="11.5" FontWeight="SemiBold" Foreground="#38BDF8" HorizontalAlignment="Right"/>
+                    </DockPanel>
+                    <ProgressBar Height="5" Minimum="0" Maximum="100" Value="{Binding ProgressPercentage}" 
+                                 Background="#1E2333" Foreground="#2563EB" BorderThickness="0"/>
+                </StackPanel>
+
+                <!-- Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Đóng" Width="90" Style="{StaticResource SecondaryButton}" Height="38" Margin="0,0,10,0" Click="CloseButton_Click"/>
+                    <Button Content="🚀 Bắt đầu In / Xuất PDF" Width="200" Style="{StaticResource PrimaryButton}" Command="{Binding StartPlotCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

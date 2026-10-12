@@ -141,6 +141,30 @@
                         </StackPanel>
                     </Grid>
                 </Border>
+
+                <!-- Card 3: BatchPlotWindow -->
+                <Border Style="{StaticResource CardPanel}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="🖨️" FontSize="14" Margin="0,0,6,0"/>
+                            <TextBlock Text="In Hàng Loạt &amp; Xuất PDF Thông Minh (BatchPlotWindow)" FontSize="13.5" FontWeight="Bold" Foreground="#F1F5F9"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="1" Text="Quét chọn khung bản vẽ ModelSpace, chọn máy in, chuẩn khổ A4/A3, kiểu in Trắng đen/Màu, tự động ghép 1 file PDF và tạo liên kết nhảy trang hai chiều cho mũi tên To-From (INBV / INPDF)."
+                                   FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal">
+                            <Button Style="{StaticResource PrimaryBtn}" Content="🖨️ Mở In Hàng Loạt &amp; Xuất PDF (INBV)" 
+                                    Click="BtnOpenBatchPlot_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

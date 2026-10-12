@@ -1390,5 +1390,90 @@ namespace CadElectricalToolkit.UI.Services
         }
 
         #endregion
+
+        #region Batch Plotting
+
+        public List<CadAccess.PlotSheetItem> ScanAllFramesForPlotting()
+        {
+            var doc = CadDatabaseHelper.ActiveDoc;
+            if (doc == null) return new List<CadAccess.PlotSheetItem>();
+
+            var list = new List<CadAccess.PlotSheetItem>();
+            CadDatabaseHelper.RunTransaction((tr, db) =>
+            {
+                list = CadAccess.BatchPlotHelper.ScanAllFramesForPlotting(db, tr);
+            });
+            return list;
+        }
+
+        public List<CadAccess.PlotSheetItem>? PickFramesForPlotting(System.Windows.Window ownerWindow)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null) return null;
+
+            using (ed.StartUserInteraction(ownerWindow))
+            {
+                var pso = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nQuét chọn các khung bản vẽ cần in (nhấn Enter khi chọn xong): "
+                };
+
+                var psr = ed.GetSelection(pso);
+                if (psr.Status != PromptStatus.OK || psr.Value.Count == 0) return null;
+
+                var list = new List<CadAccess.PlotSheetItem>();
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    var ids = psr.Value.GetObjectIds();
+                    list = CadAccess.BatchPlotHelper.ScanSelectedFramesForPlotting(tr, ids);
+                });
+                return list;
+            }
+        }
+
+        public List<string> GetAvailablePlotDevices()
+        {
+            return CadAccess.BatchPlotHelper.GetAvailablePlotDevices();
+        }
+
+        public List<string> GetMediaNamesForDevice(string deviceName)
+        {
+            return CadAccess.BatchPlotHelper.GetMediaNamesForDevice(deviceName);
+        }
+
+        public List<string> GetAvailableStyleSheets()
+        {
+            return CadAccess.BatchPlotHelper.GetAvailableStyleSheets();
+        }
+
+        public string GetDefaultOutputPdfPath()
+        {
+            var doc = CadDatabaseHelper.ActiveDoc;
+            string docDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string baseName = "BanVe_TongHop";
+            if (doc != null && !string.IsNullOrWhiteSpace(doc.Name))
+            {
+                string? d = System.IO.Path.GetDirectoryName(doc.Name);
+                if (!string.IsNullOrEmpty(d)) docDir = d;
+                baseName = System.IO.Path.GetFileNameWithoutExtension(doc.Name);
+            }
+            return System.IO.Path.Combine(docDir, $"{baseName}_MultiPage.pdf");
+        }
+
+        public CadAccess.BatchPlotResult ExecuteBatchPlot(
+            List<CadAccess.PlotSheetItem> sheets,
+            CadAccess.BatchPlotOptions options,
+            IProgress<CadAccess.PlotProgressReport>? progress = null)
+        {
+            var doc = CadDatabaseHelper.ActiveDoc;
+            if (doc == null)
+            {
+                return new CadAccess.BatchPlotResult { ErrorMessage = "Không có bản vẽ nào đang mở trong AutoCAD." };
+            }
+
+            return CadAccess.BatchPlotHelper.ExecuteBatchPlot(doc, sheets, options, progress);
+        }
+
+        #endregion
     }
 }

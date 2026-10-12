@@ -33,5 +33,26 @@ namespace CadElectricalToolkit.UI
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             return window.ShowDialog();
         }
+
+        public static void ShowModeless(this Window window)
+        {
+            if (window == null) throw new ArgumentNullException(nameof(window));
+
+            try
+            {
+                if (cadApp.MainWindow != null && cadApp.MainWindow.Handle != IntPtr.Zero)
+                {
+                    var helper = new WindowInteropHelper(window);
+                    helper.Owner = cadApp.MainWindow.Handle;
+                }
+            }
+            catch
+            {
+                // Bỏ qua lỗi gán Owner khi chạy ngoài CAD
+            }
+
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            window.Show();
+        }
     }
 }

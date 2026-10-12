@@ -70,6 +70,7 @@ C_AutoCad/
         ├── Commands/                        # AutoCAD [CommandMethod] Entry Points
         │   ├── CrossRefCommands.cs          # TCCTB, TKCRL, SYNCRL, KTCRL, DSTTKBT
         │   ├── TraceCommands.cs             # TIMTRANG, TRACELINK, TRACE, XOALINK (Vẽ line chỉ dẫn truy vết trang)
+        │   ├── BatchPlotCommands.cs         # INBV, INPDF, PUBLISHPDF, PLOTPDF, INHANG (In hàng loạt & Xuất PDF ghép trang thông minh)
         │   ├── WireNumberCommands.cs        # INSGEN, TKGEN, SYNGEN
         │   ├── TerminalCommands.cs          # TKCD, SYNCD
         │   ├── PlcCommands.cs               # TKPLCIN, TKPLCOUT, SYNPLC
@@ -87,12 +88,15 @@ C_AutoCad/
             │   └── CadInteractionService.cs  # Implementation using AutoCAD Editor & Database
             ├── ViewModels/                  # MVVM ViewModels
             │   ├── AutoNumberingViewModel.cs# ViewModel for Frame, Block Attr, & Batch Replace tabs
+            │   ├── BatchPlotViewModel.cs    # ViewModel for Batch Plotting, Printers, CTB, & PDF Hyperlinks
             │   └── ToolInfoViewModel.cs     # ViewModel for command search & cheatsheet window
             └── Views/                       # Modern Dark WPF Windows (pure XAML & thin code-behind)
                 ├── ToolInfoWindow.xaml      # Commands cheatsheet & quick run UI (WPF)
                 ├── ToolInfoWindow.xaml.cs   # Thin code-behind wiring ToolInfoViewModel
                 ├── AutoNumberingWindow.xaml # Auto numbering dialog for Frames & Block attributes (WPF)
-                └── AutoNumberingWindow.xaml.cs # Thin code-behind wiring AutoNumberingViewModel
+                ├── AutoNumberingWindow.xaml.cs # Thin code-behind wiring AutoNumberingViewModel
+                ├── BatchPlotWindow.xaml     # Batch plotting & interactive PDF smart navigation publisher (WPF)
+                └── BatchPlotWindow.xaml.cs  # Thin code-behind wiring BatchPlotViewModel
     └── CadElectricalToolkit.UiRunner/       # Standalone UI runner for testing outside AutoCAD
         ├── CadElectricalToolkit.UiRunner.csproj
         ├── App.xaml / App.xaml.cs
@@ -232,6 +236,18 @@ All plugin UI dialogs follow a clean, decoupled **MVVM (Model-View-ViewModel)** 
 - **View (`src/CadElectricalToolkit/UI/Views/`):** Pure XAML with thin code-behind. Uses a modern dark theme (`#0F1117`, `#181B26`), cohesive Tech Blue accents (`#2563EB`, `#3B82F6`, `#38BDF8`), subtle drop shadows, rounded corners, and clear visual hierarchy (see [Section 7](#7-ui-design-system--styling-standards-chuẩn-hóa-giao-diện-wpf---tech-blue)). Zero business logic in code-behind; all events bind via `ICommand` and `{Binding}`.
 - **ViewModel (`src/CadElectricalToolkit/UI/ViewModels/`):** Inherits from `ViewModelBase` (`INotifyPropertyChanged`). Manages form state, live preview calculations, and commands (`RelayCommand`). Does **not** access AutoCAD databases directly.
 - **Service Layer (`src/CadElectricalToolkit/UI/Services/`):** Implements `ICadInteractionService` / `CadInteractionService`. Encapsulates all AutoCAD Editor prompts (`ed.GetSelection`, `ed.GetPoint`), document locking (`ed.Document.LockDocument()`), and `StartUserInteraction` calls. ViewModels receive `ICadInteractionService` via dependency injection, allowing easy unit testing without active AutoCAD sessions.
+
+### 5.6. In hàng loạt & Xuất PDF thông minh có liên kết tương tác (`INBV`, `INPDF`, `PUBLISHPDF`)
+- **Quản lý danh sách bản vẽ ModelSpace:** Tự động phát hiện tất cả các khung bản vẽ (`Frame-a4`, `Frame-a3`, hoặc block bất kỳ) hoặc cho phép quét chọn trên CAD. Sắp xếp thứ tự in theo số trang tự nhiên (`01`, `02`,... `10`) hoặc theo tọa độ X-Y.
+- **Cấu hình máy in & Chuẩn khổ giấy:** Hỗ trợ mọi máy in PDF tích hợp sẵn (`AutoCAD PDF (General Documentation).pc3`, `DWG To PDF.pc3`...) và khổ giấy chuẩn A4/A3 tràn lề (`ISO full bleed`). Tùy chọn tự động khớp khổ A4/A3 theo kích thước từng khung bản vẽ.
+- **Kiểu in / Bảng nét (CTB):** Hỗ trợ chuyển đổi nhanh giữa Trắng đen (`monochrome.ctb`) và Giữ nguyên màu CAD (`acad.ctb` / `None`), hoặc chọn CTB tùy ý trong AutoCAD.
+- **Ghép trang tự động:** Xuất 1 file PDF tổng hợp duy nhất (Multi-page PDF) hoặc xuất file PDF riêng lẻ theo từng trang.
+- **TÍNH NĂNG ĐẶC BIỆT: Liên kết nhảy trang PDF tương tác (Smart Hyperlinks):**
+  - Tự động quét các cặp mũi tên liên trang (`Arrow - To - Block` $\leftrightarrow$ `Arrow - From - Block`).
+  - Tính toán tọa độ chính xác của từng mũi tên trên từng trang PDF tương ứng.
+  - Sử dụng `PdfSharp` để nhúng các thẻ `PdfLinkAnnotation` với GoTo action hai chiều giữa các trang.
+  - Khi mở file PDF trên máy tính (Acrobat Reader, Foxit, Chrome, Edge), người dùng chỉ cần nhấp chuột vào mũi tên là PDF tự động nhảy vù đến đúng trang và vị trí của mũi tên đối ứng!
+  - Nếu không tích chọn tính năng này thì file PDF được xuất ra bình thường 100%.
 
 ---
 

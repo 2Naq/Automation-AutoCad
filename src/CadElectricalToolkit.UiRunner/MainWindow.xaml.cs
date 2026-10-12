@@ -54,5 +54,14 @@ namespace CadElectricalToolkit.UiRunner
             win.Owner = this;
             win.ShowDialog();
         }
+
+        private void BtnOpenBatchPlot_Click(object sender, RoutedEventArgs e)
+        {
+            var cadService = new UI.Services.CadInteractionService();
+            var vm = new UI.ViewModels.BatchPlotViewModel(cadService);
+            var win = new BatchPlotWindow(vm);
+            win.Owner = this;
+            win.ShowDialog();
+        }
     }
 }

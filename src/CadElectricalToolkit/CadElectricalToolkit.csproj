@@ -33,6 +33,10 @@
     <PackageReference Include="AutoCAD.NET" Version="24.0.0" ExcludeAssets="runtime" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" Version="1.50.5147" />
+  </ItemGroup>
+
   <Target Name="CopyToBundle" AfterTargets="Build">
     <ItemGroup>
       <OutputDlls Include="$(TargetDir)*.*" />
