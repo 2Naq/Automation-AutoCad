@@ -134,8 +134,9 @@ namespace CadElectricalToolkit.UI.ViewModels
             return new List<CommandItem>
             {
                 new() { Code = "DSTT", Title = "Đánh số thứ tự tăng dần", Description = "Giao diện WPF: Đánh số Block Attribute, Text/MText, tuỳ chỉnh Prefix, Suffix, From, bước nhảy và sắp xếp hướng tự động.", Category = "Đánh số & Soạn thảo" },
-                new() { Code = "DSTTKBT", Title = "Đánh số thứ tự khung tên bản vẽ", Description = "Giao diện WPF: Quản lý số trang, định dạng trang hiện tại/tổng trang (A00='01', TSHEET='/24'), tự động đếm tổng số trang.", Category = "Khung tên & Trang" },
+                new() { Code = "DSBV", Title = "Đánh số thứ tự khung tên/bản vẽ", Description = "Giao diện WPF: Quản lý số trang, định dạng trang hiện tại/tổng trang (A00='01', TSHEET='/24'), tự động đếm tổng số trang.", Category = "Khung tên & Trang" },
                 new() { Code = "DOIATT", Title = "Đổi giá trị Attribute hàng loạt", Description = "Giao diện WPF: Chọn block mẫu trên CAD để tự nạp danh sách TAG (ví dụ: TERM01, TERM02, MODEL...), gán giá trị mới hoặc Tìm & Thay thế hàng loạt.", Category = "Đánh số & Soạn thảo" },
+                new() { Code = "XOAYATT", Title = "Xoay góc Attribute hàng loạt", Description = "Giao diện WPF: Chọn góc xoay (90° dọc đứng, 270°, 0°, 180° hoặc lấy góc từ CAD) và quét chọn các block để xoay tag hàng loạt hoặc click từng cái.", Category = "Đánh số & Soạn thảo" },
                 new() { Code = "CDN", Title = "Cộng Dimension nhanh", Description = "Tính tổng chiều dài tất cả các kích thước Dimension được chọn và tự sao chép kết quả vào Clipboard.", Category = "Đánh số & Soạn thảo" },
                 new() { Code = "GTD", Title = "Gom Text dọc (Gióng hàng thẳng đứng)", Description = "Căn chỉnh các đối tượng Text/MText thẳng hàng theo phương dọc với khoảng cách đều nhau.", Category = "Đánh số & Soạn thảo" },
                 new() { Code = "GTN", Title = "Gom Text ngang (Gióng hàng nằm ngang)", Description = "Căn chỉnh các đối tượng Text/MText thẳng hàng theo phương ngang với khoảng cách đều nhau.", Category = "Đánh số & Soạn thảo" },

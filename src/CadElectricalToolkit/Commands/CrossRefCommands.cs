@@ -893,6 +893,7 @@ namespace CadElectricalToolkit.Commands
         /// DSTTKBT : Đánh số thứ tự khung tên bản vẽ (Giao diện WPF hỗ trợ trang/tổng trang)
         /// </summary>
         [CommandMethod("DSTTKBT")]
+        [CommandMethod("DSBV")]
         public void SheetNumberingWithUI()
         {
             var window = new AutoNumberingWindow(openBlockAttrTab: false);

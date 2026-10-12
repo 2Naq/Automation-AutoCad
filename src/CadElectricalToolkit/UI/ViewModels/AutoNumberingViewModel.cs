@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -45,6 +46,15 @@ namespace CadElectricalToolkit.UI.ViewModels
             BatchClearBlockNameCommand = new RelayCommand(() => BatchBlockName = "");
             BatchApplyCommand = new RelayCommand(ExecuteBatchApply);
             BatchPickOneByOneCommand = new RelayCommand(ExecuteBatchPickOneByOne);
+
+            // Tab 4: Rotate
+            RotatePickSampleCommand = new RelayCommand(ExecuteRotatePickSample);
+            RotateClearBlockNameCommand = new RelayCommand(() => RotateBlockName = "");
+            RotatePickTagCommand = new RelayCommand(ExecuteRotatePickTag);
+            RotatePickAngleCommand = new RelayCommand(ExecuteRotatePickAngle);
+            RotateSetAnglePresetCommand = new RelayCommand(p => ExecuteRotateSetPreset(p?.ToString()));
+            RotateApplyCommand = new RelayCommand(ExecuteRotateApply);
+            RotatePickOneByOneCommand = new RelayCommand(ExecuteRotatePickOneByOne);
 
             // Close
             CloseCommand = new RelayCommand(ExecuteClose);
@@ -392,7 +402,26 @@ namespace CadElectricalToolkit.UI.ViewModels
         public string BatchBlockName
         {
             get => _batchBlockName;
-            set { if (SetProperty(ref _batchBlockName, value)) UpdateBatchPreview(); }
+            set
+            {
+                if (SetProperty(ref _batchBlockName, value))
+                {
+                    UpdateBatchPreview();
+                    if (!string.IsNullOrWhiteSpace(value) && _cadService.IsAvailable)
+                    {
+                        var tags = _cadService.GetBlockAttributeTags(value.Trim());
+                        if (tags != null && tags.Count > 0)
+                        {
+                            BatchTagList = tags;
+                            BatchSampleInfo = $"Block: '{value.Trim()}' ({tags.Count} TAGs)";
+                            if (string.IsNullOrEmpty(_batchAttrTag) || !_batchTagList.Contains(_batchAttrTag, StringComparer.OrdinalIgnoreCase))
+                            {
+                                BatchAttrTag = tags[0];
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private string _batchSampleInfo = "(Click để tự nạp Block & TAGs)";
@@ -600,6 +629,356 @@ namespace CadElectricalToolkit.UI.ViewModels
 
         #endregion
 
+        #region ═══════════════ TAB 4: Rotate Attribute ═══════════════
+
+        private string _rotateBlockName = "";
+        public string RotateBlockName
+        {
+            get => _rotateBlockName;
+            set
+            {
+                if (SetProperty(ref _rotateBlockName, value))
+                {
+                    UpdateRotatePreview();
+                    if (!string.IsNullOrWhiteSpace(value) && _cadService.IsAvailable)
+                    {
+                        var tags = _cadService.GetBlockAttributeTags(value.Trim());
+                        if (tags != null && tags.Count > 0)
+                        {
+                            RotateTagList = new ObservableCollection<string>(tags);
+                            RotateSampleInfo = $"Block: '{value.Trim()}' ({tags.Count} TAGs)";
+                            if (string.IsNullOrEmpty(_rotateAttrTag) || !_rotateTagList.Contains(_rotateAttrTag, StringComparer.OrdinalIgnoreCase))
+                            {
+                                RotateAttrTag = tags[0];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private string _rotateSampleInfo = "(Click để tự nạp Block, TAG & góc)";
+        public string RotateSampleInfo
+        {
+            get => _rotateSampleInfo;
+            set => SetProperty(ref _rotateSampleInfo, value);
+        }
+
+        private string _rotateAttrTag = "";
+        public string RotateAttrTag
+        {
+            get => _rotateAttrTag;
+            set
+            {
+                if (SetProperty(ref _rotateAttrTag, value))
+                {
+                    UpdateRotateSampleAngle();
+                    UpdateRotatePreview();
+                }
+            }
+        }
+
+        private ObservableCollection<string> _rotateTagList = new();
+        public ObservableCollection<string> RotateTagList
+        {
+            get => _rotateTagList;
+            set => SetProperty(ref _rotateTagList, value);
+        }
+
+        private string _rotateSampleAngleText = "(Chưa chọn mẫu)";
+        public string RotateSampleAngleText
+        {
+            get => _rotateSampleAngleText;
+            set => SetProperty(ref _rotateSampleAngleText, value);
+        }
+
+        private double _rotateAngle = 90.0;
+        public string RotateAngleText
+        {
+            get => _rotateAngle.ToString("0.##");
+            set
+            {
+                if (double.TryParse(value, out double v))
+                {
+                    _rotateAngle = v;
+                    OnPropertyChanged();
+                    UpdateRotatePreview();
+                }
+            }
+        }
+
+        private bool _rotateModeAbsolute = true;
+        public bool RotateModeAbsolute
+        {
+            get => _rotateModeAbsolute;
+            set
+            {
+                if (SetProperty(ref _rotateModeAbsolute, value))
+                {
+                    OnPropertyChanged(nameof(RotateModeRelative));
+                    UpdateRotatePreview();
+                }
+            }
+        }
+
+        public bool RotateModeRelative
+        {
+            get => !_rotateModeAbsolute;
+            set => RotateModeAbsolute = !value;
+        }
+
+        private bool _rotateKeepCenter = true;
+        public bool RotateKeepCenter
+        {
+            get => _rotateKeepCenter;
+            set => SetProperty(ref _rotateKeepCenter, value);
+        }
+
+        private double _rotateOffset = 2.0;
+        public string RotateOffset
+        {
+            get => _rotateOffset.ToString("0.##");
+            set
+            {
+                if (double.TryParse(value, out double v))
+                {
+                    _rotateOffset = v;
+                    OnPropertyChanged();
+                    UpdateRotatePreview();
+                }
+            }
+        }
+
+        private bool _rotateIncludeText = false;
+        public bool RotateIncludeText
+        {
+            get => _rotateIncludeText;
+            set => SetProperty(ref _rotateIncludeText, value);
+        }
+
+        private string _rotatePreview = "(Chọn hoặc nhập TAG để xem trước)";
+        public string RotatePreview
+        {
+            get => _rotatePreview;
+            set => SetProperty(ref _rotatePreview, value);
+        }
+
+        private string _rotateStatus = "";
+        public string RotateStatus
+        {
+            get => _rotateStatus;
+            set => SetProperty(ref _rotateStatus, value);
+        }
+
+        // Internal tag rotations from picked sample
+        private readonly Dictionary<string, double> _sampleAttrRotations = new(StringComparer.OrdinalIgnoreCase);
+
+        // Commands
+        public ICommand RotatePickSampleCommand { get; }
+        public ICommand RotateClearBlockNameCommand { get; }
+        public ICommand RotatePickTagCommand { get; }
+        public ICommand RotatePickAngleCommand { get; }
+        public ICommand RotateSetAnglePresetCommand { get; }
+        public ICommand RotateApplyCommand { get; }
+        public ICommand RotatePickOneByOneCommand { get; }
+
+        private void ExecuteRotateSetPreset(string? param)
+        {
+            if (double.TryParse(param, out double angle))
+            {
+                _rotateAngle = angle;
+                OnPropertyChanged(nameof(RotateAngleText));
+                UpdateRotatePreview();
+            }
+        }
+
+        private void UpdateRotateSampleAngle()
+        {
+            string tag = _rotateAttrTag?.Trim() ?? "";
+            if (_sampleAttrRotations.TryGetValue(tag, out double angle))
+            {
+                RotateSampleAngleText = $"{angle:0.##}° ({GetAngleDescription(angle)})";
+            }
+        }
+
+        private void UpdateRotatePreview()
+        {
+            string tag = _rotateAttrTag?.Trim() ?? "";
+            if (string.IsNullOrEmpty(tag))
+            {
+                RotatePreview = "(Vui lòng chọn hoặc nhập Attribute TAG)";
+                return;
+            }
+
+            string desc = GetAngleDescription(_rotateAngle);
+            string offsetDesc = Math.Abs(_rotateOffset) > 1e-4 ? $" [Hở: {_rotateOffset:0.##}]" : "";
+            if (_rotateModeAbsolute)
+            {
+                RotatePreview = $"TAG: '{tag}'  ➔  Góc mới: {_rotateAngle:0.##}° ({desc}){offsetDesc}";
+            }
+            else
+            {
+                RotatePreview = $"TAG: '{tag}'  ➔  Xoay thêm: +{_rotateAngle:0.##}°{offsetDesc}";
+            }
+        }
+
+        private static string GetAngleDescription(double angle)
+        {
+            double norm = (angle % 360.0 + 360.0) % 360.0;
+            if (Math.Abs(norm - 90.0) < 0.1) return "Dọc - Hướng lên";
+            if (Math.Abs(norm - 270.0) < 0.1) return "Dọc - Hướng xuống";
+            if (Math.Abs(norm - 0.0) < 0.1 || Math.Abs(norm - 360.0) < 0.1) return "Ngang chuẩn";
+            if (Math.Abs(norm - 180.0) < 0.1) return "Ngang lật";
+            return $"Nghiêng {norm:0.#}°";
+        }
+
+        private void ExecuteRotatePickSample()
+        {
+            if (!CheckCadAvailable()) return;
+            var result = _cadService.PickBlock(OwnerWindow!, "Click chọn một Block mẫu trên CAD (ví dụ: Tiếp điểm, Cảm biến...): ");
+            if (result == null) return;
+
+            if (result.IsText)
+            {
+                RotateSampleInfo = $"Text: '{result.TextContent}' (Góc: {result.RotationDegrees:0.##}°)";
+                RotateSampleAngleText = $"{result.RotationDegrees:0.##}° ({GetAngleDescription(result.RotationDegrees)})";
+                if (!string.IsNullOrEmpty(result.TextContent))
+                {
+                    RotateAttrTag = result.TextContent;
+                }
+                RotateIncludeText = true;
+                UpdateRotatePreview();
+                return;
+            }
+
+            _sampleAttrRotations.Clear();
+            foreach (var kv in result.AttributeRotations)
+                _sampleAttrRotations[kv.Key] = kv.Value;
+
+            RotateBlockName = result.BlockName;
+            RotateTagList = new ObservableCollection<string>(result.AllAttributes.Keys);
+            RotateSampleInfo = $"Block: '{result.BlockName}' ({RotateTagList.Count} TAGs)";
+
+            if (!string.IsNullOrEmpty(result.ClosestTag))
+            {
+                RotateAttrTag = result.ClosestTag;
+            }
+            else if (RotateTagList.Count > 0)
+            {
+                RotateAttrTag = RotateTagList[0];
+            }
+
+            UpdateRotateSampleAngle();
+            UpdateRotatePreview();
+        }
+
+        private void ExecuteRotatePickTag()
+        {
+            if (!CheckCadAvailable()) return;
+            var result = _cadService.PickBlock(OwnerWindow!, "Click vào Attribute trên bản vẽ để lấy TAG cần xoay: ");
+            if (result == null) return;
+
+            if (!result.IsText)
+            {
+                _sampleAttrRotations.Clear();
+                foreach (var kv in result.AttributeRotations)
+                    _sampleAttrRotations[kv.Key] = kv.Value;
+
+                RotateBlockName = result.BlockName;
+                RotateTagList = new ObservableCollection<string>(result.AllAttributes.Keys);
+                RotateSampleInfo = $"Block: '{result.BlockName}' ({RotateTagList.Count} TAGs)";
+
+                if (!string.IsNullOrEmpty(result.ClosestTag))
+                {
+                    RotateAttrTag = result.ClosestTag;
+                }
+                else if (RotateTagList.Count > 0)
+                {
+                    RotateAttrTag = RotateTagList[0];
+                }
+
+                UpdateRotateSampleAngle();
+                UpdateRotatePreview();
+            }
+            else if (!string.IsNullOrEmpty(result.TextContent))
+            {
+                RotateAttrTag = result.TextContent;
+                RotateIncludeText = true;
+                RotateSampleAngleText = $"{result.RotationDegrees:0.##}° ({GetAngleDescription(result.RotationDegrees)})";
+                UpdateRotatePreview();
+            }
+        }
+
+        private void ExecuteRotatePickAngle()
+        {
+            if (!CheckCadAvailable()) return;
+            var angle = _cadService.PickAngle(OwnerWindow!);
+            if (angle.HasValue)
+            {
+                _rotateAngle = angle.Value;
+                OnPropertyChanged(nameof(RotateAngleText));
+                UpdateRotatePreview();
+                RotateStatus = $"Đã lấy góc từ CAD: {angle.Value:0.##}° ({GetAngleDescription(angle.Value)})";
+            }
+        }
+
+        private void ExecuteRotateApply()
+        {
+            if (!CheckCadAvailable()) return;
+
+            if (string.IsNullOrWhiteSpace(_rotateAttrTag))
+            {
+                MessageBox.Show("Vui lòng chọn hoặc nhập Attribute TAG cần xoay (ví dụ: NAME, TERM01, CYL1_OUT...).", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = _cadService.RotateAttributes(
+                OwnerWindow!,
+                _rotateBlockName,
+                _rotateAttrTag,
+                _rotateAngle,
+                RotateModeRelative,
+                _rotateIncludeText,
+                _rotateKeepCenter,
+                _rotateOffset);
+
+            if (result.Count > 0)
+            {
+                string desc = GetAngleDescription(_rotateAngle);
+                RotateStatus = $"✅ Đã xoay thành công {result.Count} đối tượng sang {desc} ({_rotateAngle:0.##}°)!";
+            }
+            else
+            {
+                RotateStatus = "⚠️ Không tìm thấy đối tượng nào phù hợp trong vùng chọn.";
+            }
+        }
+
+        private void ExecuteRotatePickOneByOne()
+        {
+            if (!CheckCadAvailable()) return;
+
+            if (string.IsNullOrWhiteSpace(_rotateAttrTag))
+            {
+                MessageBox.Show("Vui lòng chọn hoặc nhập Attribute TAG cần xoay.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var result = _cadService.RotateOneByOne(
+                OwnerWindow!,
+                _rotateAttrTag,
+                _rotateAngle,
+                RotateModeRelative,
+                _rotateKeepCenter,
+                _rotateOffset);
+
+            if (result.Count > 0)
+            {
+                RotateStatus = $"✅ Đã xoay {result.Count} đối tượng sang {_rotateAngle:0.##}°!";
+            }
+        }
+
+        #endregion
+
         #region ═══════════════ Footer & Tab ═══════════════
 
         private int _selectedTabIndex = 1;
@@ -624,6 +1003,7 @@ namespace CadElectricalToolkit.UI.ViewModels
             {
                 0 => "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào khung tên để tự nhận diện Block và TAG số trang (A00).",
                 2 => "💡 Mẹo: Nhấn 'Chọn Block mẫu trên CAD' rồi click vào block (ví dụ: COIL) để tự nạp danh sách TAG (TERM01, TERM02...).",
+                3 => "💡 Mẹo: Nhấn '⬆️ 90°' để xoay dọc thẳng đứng, rồi quét chọn các khối trên CAD để xoay hàng loạt.",
                 _ => "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào đối tượng trên CAD để tự điền tên Block và TAG."
             };
         }

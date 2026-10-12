@@ -19,6 +19,15 @@ namespace CadElectricalToolkit.UI.Services
         /// <summary>Danh sách cặp (Tag, Value) của tất cả attributes trên block</summary>
         public Dictionary<string, string> AllAttributes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>Danh sách góc xoay (độ) của từng Tag attribute trên block</summary>
+        public Dictionary<string, double> AttributeRotations { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Góc xoay (độ) của Tag gần nhất hoặc Text đã click</summary>
+        public double RotationDegrees { get; set; }
+
+        /// <summary>Nội dung text nếu là Text/MText</summary>
+        public string TextContent { get; set; } = "";
+
         /// <summary>True nếu đối tượng chọn là Text/MText (không phải Block)</summary>
         public bool IsText { get; set; }
     }
@@ -36,6 +45,14 @@ namespace CadElectricalToolkit.UI.Services
     /// Kết quả khi thực hiện đổi attribute hàng loạt
     /// </summary>
     public class BatchEditResult
+    {
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// Kết quả khi thực hiện xoay attribute / text
+    /// </summary>
+    public class RotateResult
     {
         public int Count { get; set; }
     }
@@ -59,6 +76,16 @@ namespace CadElectricalToolkit.UI.Services
         /// <param name="prompt">Thông báo hiển thị trên command line</param>
         /// <returns>Kết quả nhận diện, hoặc null nếu người dùng hủy</returns>
         PickBlockResult? PickBlock(System.Windows.Window ownerWindow, string prompt);
+
+        /// <summary>
+        /// Cho phép người dùng click trên CAD để lấy góc xoay của một Attribute / Text / Line
+        /// </summary>
+        double? PickAngle(System.Windows.Window ownerWindow);
+
+        /// <summary>
+        /// Lấy toàn bộ danh sách Attribute TAG của một block name từ database AutoCAD
+        /// </summary>
+        List<string> GetBlockAttributeTags(string blockName);
 
         /// <summary>
         /// Quét chọn và đánh số hàng loạt cho Block Attribute / Text
@@ -106,5 +133,29 @@ namespace CadElectricalToolkit.UI.Services
             string targetTag,
             bool isDirect, string newValFixed,
             string findText, string replaceText, bool matchCase);
+
+        /// <summary>
+        /// Quét chọn và xoay attribute hàng loạt cho các Block được chọn
+        /// </summary>
+        RotateResult RotateAttributes(
+            System.Windows.Window ownerWindow,
+            string targetBlockName,
+            string targetTag,
+            double targetAngleDegrees,
+            bool isRelative,
+            bool includeText,
+            bool keepCenter = true,
+            double offsetDistance = 0.0);
+
+        /// <summary>
+        /// Click từng block trên CAD để xoay attribute
+        /// </summary>
+        RotateResult RotateOneByOne(
+            System.Windows.Window ownerWindow,
+            string targetTag,
+            double targetAngleDegrees,
+            bool isRelative,
+            bool keepCenter = true,
+            double offsetDistance = 0.0);
     }
 }

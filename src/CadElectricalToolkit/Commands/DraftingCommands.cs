@@ -86,6 +86,18 @@ namespace CadElectricalToolkit.Commands
         }
 
         /// <summary>
+        /// XOAYATT / XOAYTAG / ROTT : Xoay góc Attribute hoặc Text hàng loạt (mặc định mở Tab 4: Xoay Attribute)
+        /// </summary>
+        [CommandMethod("XOAYATT")]
+        [CommandMethod("XOAYTAG")]
+        [CommandMethod("ROTT")]
+        public void RotateAttribute()
+        {
+            var window = new AutoNumberingWindow(tabIndex: 3);
+            window.ShowModal();
+        }
+
+        /// <summary>
         /// GTD : Gom text dọc - Căn gióng các đối tượng Text theo phương thẳng đứng
         /// </summary>
         [CommandMethod("GTD")]
