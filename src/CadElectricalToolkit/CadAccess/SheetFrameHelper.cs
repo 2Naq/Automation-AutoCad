@@ -17,6 +17,11 @@ namespace CadElectricalToolkit.CadAccess
         public string SheetNo { get; set; } = "";
 
         /// <summary>
+        /// Tổng số trang bản vẽ (giá trị của Tag TSHEET / TOTAL_SHEET nếu có)
+        /// </summary>
+        public string TotalSheets { get; set; } = "";
+
+        /// <summary>
         /// ObjectId của block khung tên
         /// </summary>
         public ObjectId BlockId { get; set; }
@@ -155,14 +160,48 @@ namespace CadElectricalToolkit.CadAccess
                     string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
                     if (string.IsNullOrWhiteSpace(sheetNo)) continue;
 
+                    string? totalSheets = blkRef.GetAttributeValue(tr, "TSHEET", "TOTAL_SHEET", "TOTAL", "TONG_TRANG");
+
                     if (TryGetExtents(blkRef, out Extents3d ext))
                     {
                         frames.Add(new SheetFrame
                         {
                             SheetNo = sheetNo!.Trim(),
+                            TotalSheets = totalSheets?.Trim() ?? "",
                             BlockId = blkRef.ObjectId,
                             Extents = ext
                         });
+                    }
+                }
+            }
+
+            // Fallback nếu không khớp tên titleBlockNames định nghĩa sẵn
+            if (frames.Count == 0)
+            {
+                foreach (var id in blockIds)
+                {
+                    if (tr.GetObject(id, OpenMode.ForRead) is BlockReference blkRef)
+                    {
+                        string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
+                        if (string.IsNullOrWhiteSpace(sheetNo)) continue;
+
+                        if (TryGetExtents(blkRef, out Extents3d ext))
+                        {
+                            double w = Math.Abs(ext.MaxPoint.X - ext.MinPoint.X);
+                            double h = Math.Abs(ext.MaxPoint.Y - ext.MinPoint.Y);
+                            // Khung tên bản vẽ luôn có kích thước lớn (> 100mm)
+                            if (w > 100 && h > 100)
+                            {
+                                string? totalSheets = blkRef.GetAttributeValue(tr, "TSHEET", "TOTAL_SHEET", "TOTAL", "TONG_TRANG");
+                                frames.Add(new SheetFrame
+                                {
+                                    SheetNo = sheetNo!.Trim(),
+                                    TotalSheets = totalSheets?.Trim() ?? "",
+                                    BlockId = blkRef.ObjectId,
+                                    Extents = ext
+                                });
+                            }
+                        }
                     }
                 }
             }
@@ -187,11 +226,14 @@ namespace CadElectricalToolkit.CadAccess
                     string? sheetNo = blkRef.GetAttributeValue(tr, sheetNoTags);
                     if (string.IsNullOrWhiteSpace(sheetNo)) continue;
 
+                    string? totalSheets = blkRef.GetAttributeValue(tr, "TSHEET", "TOTAL_SHEET", "TOTAL", "TONG_TRANG");
+
                     if (TryGetExtents(blkRef, out Extents3d ext))
                     {
                         frames.Add(new SheetFrame
                         {
                             SheetNo = sheetNo!.Trim(),
+                            TotalSheets = totalSheets?.Trim() ?? "",
                             BlockId = blkRef.ObjectId,
                             Extents = ext
                         });

@@ -100,7 +100,7 @@
                             <TextBlock Text="Giao diện Đánh số thứ tự (AutoNumberingWindow)" FontSize="13.5" FontWeight="Bold" Foreground="#F1F5F9"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="1" Text="Bao gồm 4 tab: Đánh số khung tên (DSTTKBT), Đánh số Block Attribute / Text (DSTT), Đổi giá trị Attribute (DOIATT), và Xoay Attribute hàng loạt (XOAYATT)."
+                        <TextBlock Grid.Row="1" Text="Bao gồm 5 tab: Đánh số khung tên (DSTTKBT), Đánh số Block Attribute / Text (DSTT), Đổi giá trị Attribute (DOIATT), Xoay Attribute hàng loạt (XOAYATT), và Dây liên trang To-From (SYNTF / DANDAY)."
                                    FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                         <WrapPanel Grid.Row="2" Orientation="Horizontal">
@@ -111,7 +111,9 @@
                             <Button Style="{StaticResource PurpleBtn}" Content="✏️ Tab 3: Đổi Attribute (DOIATT)" 
                                     Margin="0,0,8,6" Click="BtnOpenBatchAttr_Click"/>
                             <Button Style="{StaticResource PrimaryBtn}" Content="🔄 Tab 4: Xoay Attribute (XOAYATT)" 
-                                    Margin="0,0,0,6" Click="BtnOpenRotateAttr_Click"/>
+                                    Margin="0,0,8,6" Click="BtnOpenRotateAttr_Click"/>
+                            <Button Style="{StaticResource SuccessBtn}" Content="⚡ Tab 5: Dây liên trang (SYNTF)" 
+                                    Margin="0,0,0,6" Click="BtnOpenWireArrows_Click"/>
                         </WrapPanel>
                     </Grid>
                 </Border>

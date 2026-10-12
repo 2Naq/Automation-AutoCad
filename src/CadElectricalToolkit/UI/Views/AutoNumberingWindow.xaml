@@ -508,7 +508,7 @@
                 <comp:AppLogo Margin="0,0,12,0"/>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="ĐÁNH SỐ THỨ TỰ &amp; QUẢN LÝ ATTRIBUTE" Foreground="#F8FAFC" FontWeight="Bold" FontSize="13.5"/>
-                    <TextBlock Text="Hỗ trợ Block Attribute, Khung tên, Đổi &amp; Xoay Tag hàng loạt" Foreground="#94A3B8" FontSize="10.5"/>
+                    <TextBlock Text="Hỗ trợ Khung tên, Block Attribute, Đổi &amp; Xoay Tag, Dây liên trang To-From" Foreground="#94A3B8" FontSize="10.5"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -1109,6 +1109,195 @@
                         </Grid>
                         <TextBlock Text="{Binding RotateStatus}" FontSize="11" FontWeight="SemiBold" 
                                    Foreground="#4ADE80" TextAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ══════════ TAB 5: DÂY LIÊN TRANG (TO-FROM) ══════════ -->
+            <TabItem Header="Dây liên trang (To-From)" FontWeight="SemiBold" FontSize="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,4,0,0" Padding="0,0,4,16">
+                    <StackPanel>
+                        <!-- Nhóm 1: Nhận diện Block Mũi tên & Attribute -->
+                        <Border Style="{StaticResource CardPanel}">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Nhận diện Mũi tên tín hiệu &amp; TAG dây" Style="{StaticResource SectionHeader}" VerticalAlignment="Center"/>
+                                    <Button Content="🎯 Chọn mẫu trên CAD" Style="{StaticResource SecondaryButton}" 
+                                            Height="27" Padding="10,0" HorizontalAlignment="Right"
+                                            Command="{Binding WirePickSampleCommand}"
+                                            ToolTip="Click vào một block mũi tên trên bản vẽ để tự động nhận diện Block và các TAG"/>
+                                </DockPanel>
+
+                                <!-- Tên Block mũi tên -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="95"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Tên Block:" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Grid.Column="1" Text="{Binding WireBlockName, UpdateSourceTrigger=PropertyChanged}" 
+                                             FontWeight="SemiBold" ToolTip="Tên Block mũi tên (ví dụ: Arrow - To - Block, để trống để áp dụng cho mọi block mũi tên)"/>
+                                    <Button Grid.Column="2" Content="  Tất cả  " 
+                                            Style="{StaticResource SecondaryButton}" Height="28" Padding="8,0" Margin="4,0,0,0" 
+                                            Command="{Binding WireClearBlockNameCommand}"/>
+                                </Grid>
+
+                                <!-- TAG Tên dây / Tín hiệu -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="95"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="TAG Tên dây:" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox Grid.Column="1" IsEditable="True" 
+                                              FontWeight="Bold" Foreground="#38BDF8"
+                                              ItemsSource="{Binding WireTagList}"
+                                              Text="{Binding WireTag, UpdateSourceTrigger=PropertyChanged}"
+                                              ToolTip="TAG chứa mã/tên dây dẫn (trong bản vẽ của bạn: WIRE_NAME, ví dụ: 24VP, DI.19)"/>
+                                    <Button Grid.Column="2" Width="85" Content="🎯 Chọn TAG" 
+                                            Style="{StaticResource SecondaryButton}" Margin="6,0,0,0"
+                                            Command="{Binding WirePickTagCommand}"/>
+                                </Grid>
+
+                                <!-- TAG Địa chỉ To & From -->
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="95"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="TAG Địa chỉ:" Style="{StaticResource FieldLabel}"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Nguồn (TO):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,2"/>
+                                        <ComboBox IsEditable="True" FontWeight="SemiBold"
+                                                  ItemsSource="{Binding WireAddrToTagList}"
+                                                  Text="{Binding WireAddrToTag, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="TAG ghi vị trí trang đích (trong bản vẽ của bạn: ADDRESS_TO)"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Text="Đích (FROM):" FontSize="10.5" Foreground="#94A3B8" Margin="0,0,0,2"/>
+                                        <ComboBox IsEditable="True" FontWeight="SemiBold"
+                                                  ItemsSource="{Binding WireAddrFromTagList}"
+                                                  Text="{Binding WireAddrFromTag, UpdateSourceTrigger=PropertyChanged}"
+                                                  ToolTip="TAG ghi vị trí trang nguồn (thường là ADDRESS_FROM hoặc ADDRESS_TO)"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Nhóm 2: Định dạng hiển thị địa chỉ trang -->
+                        <Border Style="{StaticResource CardPanel}">
+                            <StackPanel>
+                                <TextBlock Text="Định dạng địa chỉ tham chiếu liên trang" Style="{StaticResource SectionHeader}"/>
+
+                                <!-- Kiểu hiển thị -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <RadioButton Grid.Row="0" Grid.Column="0" Content="1. Chỉ số trang (02)" 
+                                                 IsChecked="{Binding WireFormatSheetOnly}" FontWeight="SemiBold" Margin="0,0,0,6"
+                                                 ToolTip="Chỉ hiển thị số trang đích (ví dụ: 02)"/>
+                                    <RadioButton Grid.Row="0" Grid.Column="1" Content="2. Trang - Ô lưới (02-5B)" 
+                                                 IsChecked="{Binding WireFormatSheetGrid}" FontWeight="SemiBold" Margin="0,0,0,6"
+                                                 ToolTip="Hiển thị số trang kèm tọa độ hàng/cột (ví dụ: 02-5B)"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="0" Content="3. Trang / Tổng (02/07)" 
+                                                 IsChecked="{Binding WireFormatSheetTotal}" FontWeight="SemiBold"
+                                                 ToolTip="Hiển thị số trang trên tổng số trang (ví dụ: 02/07)"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="1" Content="4. Tùy biến định dạng" 
+                                                 IsChecked="{Binding WireFormatCustom}" FontWeight="SemiBold"
+                                                 ToolTip="Tùy biến Prefix, Suffix và Dấu phân cách"/>
+                                </Grid>
+
+                                <!-- Tùy chọn chi tiết -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Tiền tố (Prefix):" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding WirePrefix, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Dấu nối ô lưới:" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding WireGridSeparator, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="Hậu tố (Suffix):" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding WireSuffix, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <CheckBox Content="Số trang 2 chữ số (01, 02, ...)" 
+                                          IsChecked="{Binding WireTwoDigits}" FontWeight="SemiBold" 
+                                          Foreground="#38BDF8" Margin="0,2,0,4"/>
+
+                                <CheckBox Content="Gộp nhiều trang đích bằng dấu phẩy (, ) khi dây rẽ nhánh" 
+                                          IsChecked="{Binding WireIncludeMultiSheets}" FontSize="11" 
+                                          Foreground="#94A3B8" Margin="0,0,0,4"/>
+
+                                <CheckBox Content="Khớp theo tên gốc (Bỏ qua đuôi sau '-' ví dụ: DI.08-RB1 khớp DI.08-RB2)" 
+                                          IsChecked="{Binding WireMatchBaseName}" FontSize="11" 
+                                          Foreground="#38BDF8" Margin="0,0,0,4"
+                                          ToolTip="Tự động ghép đôi các dây có cùng phần đầu tín hiệu (ví dụ: DI.08) dù hậu tố trạm khác nhau (-RB1, -RB2)"/>
+
+                                <CheckBox Content="Đồng bộ 2 chiều (Cả Nguồn ⟷ Đích)" 
+                                          IsChecked="{Binding WireUpdateBothWays}" FontSize="11" 
+                                          Foreground="#94A3B8"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Nhóm 3: Khung xem trước -->
+                        <Border Style="{StaticResource CardPanel}">
+                            <StackPanel>
+                                <TextBlock Text="Xem trước kết quả" Style="{StaticResource SectionHeader}"/>
+                                <Border Style="{StaticResource PreviewPanel}">
+                                    <DockPanel>
+                                        <TextBlock Text="Định dạng địa chỉ ghi vào TAG: " FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding WirePreview}" FontWeight="Bold" FontSize="14" 
+                                                   Foreground="#38BDF8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Actions -->
+                        <Grid Margin="0,2,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="⚡ ĐỒNG BỘ TOÀN BỘ BẢN VẼ" 
+                                    Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding WireSyncAllCommand}"
+                                    ToolTip="Tự động quét tất cả các trang trong ModelSpace và đồng bộ địa chỉ dây hàng loạt"/>
+                            <Button Grid.Column="2" Content="🎯 Quét chọn vùng" 
+                                    Style="{StaticResource SecondaryButton}" Height="36" Padding="12,0"
+                                    Command="{Binding WireSyncSelectedCommand}"
+                                    ToolTip="Quét chuột chọn các mũi tên hoặc khung bản vẽ cụ thể trên CAD"/>
+                            <Button Grid.Column="4" Content="🔗 Nối 2 mũi tên" 
+                                    Style="{StaticResource SecondaryButton}" Height="36" Padding="12,0"
+                                    Command="{Binding WireConnectTwoCommand}"
+                                    ToolTip="Click chọn Mũi tên A rồi click chọn Mũi tên B để gắn liên kết thủ công"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding WireStatus}" FontSize="11" FontWeight="SemiBold" 
+                                   Foreground="#4ADE80" TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

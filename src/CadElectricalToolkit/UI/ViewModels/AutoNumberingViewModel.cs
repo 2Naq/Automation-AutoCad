@@ -56,6 +56,14 @@ namespace CadElectricalToolkit.UI.ViewModels
             RotateApplyCommand = new RelayCommand(ExecuteRotateApply);
             RotatePickOneByOneCommand = new RelayCommand(ExecuteRotatePickOneByOne);
 
+            // Tab 5: Wire To-From
+            WirePickSampleCommand = new RelayCommand(ExecuteWirePickSample);
+            WireClearBlockNameCommand = new RelayCommand(() => WireBlockName = "");
+            WirePickTagCommand = new RelayCommand(ExecuteWirePickTag);
+            WireSyncAllCommand = new RelayCommand(ExecuteWireSyncAll);
+            WireSyncSelectedCommand = new RelayCommand(ExecuteWireSyncSelected);
+            WireConnectTwoCommand = new RelayCommand(ExecuteWireConnectTwo);
+
             // Close
             CloseCommand = new RelayCommand(ExecuteClose);
         }
@@ -979,6 +987,349 @@ namespace CadElectricalToolkit.UI.ViewModels
 
         #endregion
 
+        #region ═══════════════ TAB 5: Dây liên trang (Wire To-From) ═══════════════
+
+        private string _wireBlockName = "Arrow - To - Block, Arrow - From - Block";
+        public string WireBlockName
+        {
+            get => _wireBlockName;
+            set => SetProperty(ref _wireBlockName, value);
+        }
+
+        private string _wireTag = "WIRE_NAME";
+        public string WireTag
+        {
+            get => _wireTag;
+            set => SetProperty(ref _wireTag, value);
+        }
+
+        public ObservableCollection<string> WireTagList { get; } = new()
+        {
+            "WIRE_NAME", "SIG_NAME", "SIGNAL", "WIRE_NO", "WIRE", "TAG", "NAME"
+        };
+
+        private string _wireAddrToTag = "ADDRESS_TO";
+        public string WireAddrToTag
+        {
+            get => _wireAddrToTag;
+            set => SetProperty(ref _wireAddrToTag, value);
+        }
+
+        public ObservableCollection<string> WireAddrToTagList { get; } = new()
+        {
+            "ADDRESS_TO", "TO_PAGE", "PAGE_REF", "ADDRESS", "REF", "DEST_PAGE", "PAGE"
+        };
+
+        private string _wireAddrFromTag = "ADDRESS_FROM";
+        public string WireAddrFromTag
+        {
+            get => _wireAddrFromTag;
+            set => SetProperty(ref _wireAddrFromTag, value);
+        }
+
+        public ObservableCollection<string> WireAddrFromTagList { get; } = new()
+        {
+            "ADDRESS_FROM", "ADDRESS_TO", "FROM_PAGE", "PAGE_REF", "ADDRESS", "REF", "DEST_PAGE", "PAGE"
+        };
+
+        private int _wireFormatModeIndex = 0;
+        public int WireFormatModeIndex
+        {
+            get => _wireFormatModeIndex;
+            set { if (SetProperty(ref _wireFormatModeIndex, value)) UpdateWirePreview(); }
+        }
+
+        public bool WireFormatSheetOnly
+        {
+            get => _wireFormatModeIndex == 0;
+            set { if (value) WireFormatModeIndex = 0; }
+        }
+
+        public bool WireFormatSheetGrid
+        {
+            get => _wireFormatModeIndex == 1;
+            set { if (value) WireFormatModeIndex = 1; }
+        }
+
+        public bool WireFormatSheetTotal
+        {
+            get => _wireFormatModeIndex == 2;
+            set { if (value) WireFormatModeIndex = 2; }
+        }
+
+        public bool WireFormatCustom
+        {
+            get => _wireFormatModeIndex == 3;
+            set { if (value) WireFormatModeIndex = 3; }
+        }
+
+        private string _wirePrefix = "";
+        public string WirePrefix
+        {
+            get => _wirePrefix;
+            set { if (SetProperty(ref _wirePrefix, value)) UpdateWirePreview(); }
+        }
+
+        private string _wireSuffix = "";
+        public string WireSuffix
+        {
+            get => _wireSuffix;
+            set { if (SetProperty(ref _wireSuffix, value)) UpdateWirePreview(); }
+        }
+
+        private string _wireGridSeparator = "-";
+        public string WireGridSeparator
+        {
+            get => _wireGridSeparator;
+            set { if (SetProperty(ref _wireGridSeparator, value)) UpdateWirePreview(); }
+        }
+
+        private bool _wireTwoDigits = true;
+        public bool WireTwoDigits
+        {
+            get => _wireTwoDigits;
+            set { if (SetProperty(ref _wireTwoDigits, value)) UpdateWirePreview(); }
+        }
+
+        private bool _wireIncludeMultiSheets = true;
+        public bool WireIncludeMultiSheets
+        {
+            get => _wireIncludeMultiSheets;
+            set => SetProperty(ref _wireIncludeMultiSheets, value);
+        }
+
+        private bool _wireUpdateBothWays = true;
+        public bool WireUpdateBothWays
+        {
+            get => _wireUpdateBothWays;
+            set => SetProperty(ref _wireUpdateBothWays, value);
+        }
+
+        private bool _wireMatchBaseName = false;
+        public bool WireMatchBaseName
+        {
+            get => _wireMatchBaseName;
+            set => SetProperty(ref _wireMatchBaseName, value);
+        }
+
+        private string _wirePreview = "02";
+        public string WirePreview
+        {
+            get => _wirePreview;
+            set => SetProperty(ref _wirePreview, value);
+        }
+
+        private string _wireStatus = "";
+        public string WireStatus
+        {
+            get => _wireStatus;
+            set => SetProperty(ref _wireStatus, value);
+        }
+
+        public ObservableCollection<string> WireDetails { get; } = new();
+
+        public ICommand WirePickSampleCommand { get; }
+        public ICommand WireClearBlockNameCommand { get; }
+        public ICommand WirePickTagCommand { get; }
+        public ICommand WireSyncAllCommand { get; }
+        public ICommand WireSyncSelectedCommand { get; }
+        public ICommand WireConnectTwoCommand { get; }
+
+        private void UpdateWirePreview()
+        {
+            string sampleSheet = _wireTwoDigits ? "02" : "2";
+            string sampleTotal = _wireTwoDigits ? "07" : "7";
+            string sampleRow = "5";
+            string sampleCol = "B";
+
+            WirePreview = _wireFormatModeIndex switch
+            {
+                1 => $"{_wirePrefix}{sampleSheet}{_wireGridSeparator}{sampleRow}{sampleCol}{_wireSuffix}",
+                2 => $"{_wirePrefix}{sampleSheet}/{sampleTotal}{_wireSuffix}",
+                3 => $"{_wirePrefix}{sampleSheet}{_wireGridSeparator}{sampleRow}{sampleCol}{_wireSuffix}",
+                _ => $"{_wirePrefix}{sampleSheet}{_wireSuffix}",
+            };
+            OnPropertyChanged(nameof(WireFormatSheetOnly));
+            OnPropertyChanged(nameof(WireFormatSheetGrid));
+            OnPropertyChanged(nameof(WireFormatSheetTotal));
+            OnPropertyChanged(nameof(WireFormatCustom));
+        }
+
+        private void ExecuteWirePickSample()
+        {
+            if (!CheckCadAvailable()) return;
+
+            var result = _cadService.PickBlock(OwnerWindow!, "Chọn một Mũi tên tín hiệu mẫu trên CAD (Arrow To/From): ");
+            if (result == null) return;
+
+            if (!string.IsNullOrEmpty(result.BlockName))
+            {
+                if (result.BlockName.IndexOf("TO", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    string fromName = result.BlockName.Replace("To", "From").Replace("TO", "FROM");
+                    WireBlockName = $"{result.BlockName}, {fromName}";
+                }
+                else if (result.BlockName.IndexOf("FROM", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    string toName = result.BlockName.Replace("From", "To").Replace("FROM", "TO");
+                    WireBlockName = $"{toName}, {result.BlockName}";
+                }
+                else
+                {
+                    WireBlockName = result.BlockName;
+                }
+
+                // Nạp tất cả attribute tags của block
+                var tags = _cadService.GetBlockAttributeTags(result.BlockName);
+                if (tags.Count > 0)
+                {
+                    WireTagList.Clear();
+                    WireAddrToTagList.Clear();
+                    WireAddrFromTagList.Clear();
+                    foreach (var t in tags)
+                    {
+                        WireTagList.Add(t);
+                        WireAddrToTagList.Add(t);
+                        WireAddrFromTagList.Add(t);
+                    }
+
+                    // Tự động nhận diện Tag tên dây
+                    var foundWireTag = tags.FirstOrDefault(t => 
+                        string.Equals(t, "WIRE_NAME", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "SIG_NAME", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "SIGNAL", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "WIRE_NO", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "WIRE", StringComparison.OrdinalIgnoreCase));
+                    if (foundWireTag != null) WireTag = foundWireTag;
+
+                    // Tự động nhận diện Tag địa chỉ To
+                    var foundToTag = tags.FirstOrDefault(t => 
+                        string.Equals(t, "ADDRESS_TO", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "TO_PAGE", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "PAGE_REF", StringComparison.OrdinalIgnoreCase));
+                    if (foundToTag != null) WireAddrToTag = foundToTag;
+
+                    // Tự động nhận diện Tag địa chỉ From
+                    var foundFromTag = tags.FirstOrDefault(t => 
+                        string.Equals(t, "ADDRESS_FROM", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "FROM_PAGE", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(t, "ADDRESS_TO", StringComparison.OrdinalIgnoreCase));
+                    if (foundFromTag != null) WireAddrFromTag = foundFromTag;
+                }
+
+                WireStatus = $"Đã nhận diện Block '{result.BlockName}' với TAG Dây '{WireTag}' & TAG Đích '{WireAddrToTag}'";
+            }
+        }
+
+        private void ExecuteWirePickTag()
+        {
+            if (!CheckCadAvailable()) return;
+
+            var result = _cadService.PickBlock(OwnerWindow!, "Click chọn vào Attribute tên dây (WIRE_NAME) trên CAD: ");
+            if (result != null && !string.IsNullOrEmpty(result.ClosestTag))
+            {
+                WireTag = result.ClosestTag;
+                if (!WireTagList.Contains(result.ClosestTag))
+                    WireTagList.Insert(0, result.ClosestTag);
+
+                WireStatus = $"Đã chọn Attribute TAG tên dây: '{result.ClosestTag}'";
+            }
+        }
+
+        private WireArrowSyncOptions BuildWireOptions()
+        {
+            return new WireArrowSyncOptions
+            {
+                TargetBlockName = _wireBlockName?.Trim() ?? "",
+                WireTag = _wireTag?.Trim() ?? "WIRE_NAME",
+                AddressToTag = _wireAddrToTag?.Trim() ?? "ADDRESS_TO",
+                AddressFromTag = _wireAddrFromTag?.Trim() ?? "ADDRESS_FROM",
+                FormatModeIndex = _wireFormatModeIndex,
+                Prefix = _wirePrefix ?? "",
+                Suffix = _wireSuffix ?? "",
+                GridSeparator = _wireGridSeparator ?? "-",
+                TwoDigits = _wireTwoDigits,
+                IncludeMultipleSheets = _wireIncludeMultiSheets,
+                UpdateBothWays = _wireUpdateBothWays,
+                MatchBaseSignalOnly = _wireMatchBaseName,
+                BaseSignalSeparator = "-"
+            };
+        }
+
+        private void ExecuteWireSyncAll()
+        {
+            if (!CheckCadAvailable()) return;
+
+            var options = BuildWireOptions();
+            var result = _cadService.SyncWireArrowsAll(OwnerWindow!, options);
+
+            WireDetails.Clear();
+            foreach (var d in result.Details) WireDetails.Add(d);
+
+            if (result.TotalUpdated > 0)
+            {
+                string msg = $"✅ Đã đồng bộ {result.TotalUpdated} mũi tên ({result.LinkedGroupCount} cặp tín hiệu)!";
+                if (result.UnmatchedSignals.Count > 0)
+                {
+                    msg += $"\n⚠️ Có {result.UnmatchedSignals.Count} dây chưa tìm thấy đầu đối ứng: {string.Join(", ", result.UnmatchedSignals.Take(5))}" +
+                           (result.UnmatchedSignals.Count > 5 ? "..." : "");
+                }
+                WireStatus = msg;
+            }
+            else if (result.TotalArrowsFound > 0)
+            {
+                WireStatus = $"⚠️ Tìm thấy {result.TotalArrowsFound} mũi tên nhưng không ghép cặp được dây nào (Kiểm tra tên dây và TAG).";
+            }
+            else
+            {
+                WireStatus = "⚠️ Không tìm thấy block mũi tên nào phù hợp trong bản vẽ.";
+            }
+        }
+
+        private void ExecuteWireSyncSelected()
+        {
+            if (!CheckCadAvailable()) return;
+
+            var options = BuildWireOptions();
+            var result = _cadService.SyncWireArrowsSelected(OwnerWindow!, options);
+
+            WireDetails.Clear();
+            foreach (var d in result.Details) WireDetails.Add(d);
+
+            if (result.TotalUpdated > 0)
+            {
+                string msg = $"✅ Đã đồng bộ thành công {result.TotalUpdated} mũi tên ({result.LinkedGroupCount} cặp tín hiệu) trong vùng chọn!";
+                if (result.UnmatchedSignals.Count > 0)
+                {
+                    msg += $"\n⚠️ Có {result.UnmatchedSignals.Count} dây chưa tìm thấy đầu đối ứng: {string.Join(", ", result.UnmatchedSignals.Take(5))}" +
+                           (result.UnmatchedSignals.Count > 5 ? "..." : "");
+                }
+                WireStatus = msg;
+            }
+            else if (result.TotalArrowsFound > 0)
+            {
+                WireStatus = $"⚠️ Quét được {result.TotalArrowsFound} mũi tên nhưng không ghép cặp được dây nào (Kiểm tra xem 2 đầu đã cùng tên dây chưa).";
+            }
+            else
+            {
+                WireStatus = "⚠️ Không có mũi tên nào được cập nhật trong vùng chọn.";
+            }
+        }
+
+        private void ExecuteWireConnectTwo()
+        {
+            if (!CheckCadAvailable()) return;
+
+            var options = BuildWireOptions();
+            bool ok = _cadService.ConnectTwoArrowsManually(OwnerWindow!, options);
+            if (ok)
+            {
+                WireStatus = "✅ Đã liên kết và ghi địa chỉ thành công giữa 2 mũi tên!";
+            }
+        }
+
+        #endregion
+
         #region ═══════════════ Footer & Tab ═══════════════
 
         private int _selectedTabIndex = 1;
@@ -1004,6 +1355,7 @@ namespace CadElectricalToolkit.UI.ViewModels
                 0 => "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào khung tên để tự nhận diện Block và TAG số trang (A00).",
                 2 => "💡 Mẹo: Nhấn 'Chọn Block mẫu trên CAD' rồi click vào block (ví dụ: COIL) để tự nạp danh sách TAG (TERM01, TERM02...).",
                 3 => "💡 Mẹo: Nhấn '⬆️ 90°' để xoay dọc thẳng đứng, rồi quét chọn các khối trên CAD để xoay hàng loạt.",
+                4 => "💡 Mẹo: Nhấn 'Chọn mẫu trên CAD' rồi click vào mũi tên để tự điền tên Block và TAG WIRE_NAME, ADDRESS_TO.",
                 _ => "💡 Mẹo: Nhấn 'Chọn TAG' rồi click vào đối tượng trên CAD để tự điền tên Block và TAG."
             };
         }

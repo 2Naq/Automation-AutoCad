@@ -148,7 +148,7 @@ namespace CadElectricalToolkit.UI.ViewModels
                 new() { Code = "XOALINK", Title = "Xóa đường chỉ dẫn truy vết trang", Description = "Dọn dẹp nhanh tất cả các đường mũi tên/line chỉ dẫn do lệnh TIMTRANG tạo ra.", Category = "Khung tên & Trang" },
                 new() { Code = "TKDMBV", Title = "Thống kê danh mục bản vẽ", Description = "Quét các khung tên trên bản vẽ và tạo bảng mục lục bản vẽ chuẩn AutoCAD Table.", Category = "Khung tên & Trang" },
                 new() { Code = "SYNREV", Title = "Đồng bộ số lần thay đổi bản vẽ (Revision)", Description = "Cập nhật hàng loạt chỉ số Revision cho toàn bộ các khung tên được chọn.", Category = "Khung tên & Trang" },
-                new() { Code = "SYNTF", Title = "Đồng bộ mũi tên TO-FROM", Description = "Tự động liên kết và cập nhật địa chỉ trang nguồn / trang đích giữa các cặp mũi tên To/From.", Category = "Khung tên & Trang" },
+                new() { Code = "SYNTF", Title = "Đồng bộ mũi tên TO-FROM (DANDAY)", Description = "Mở giao diện Tab 5 đánh thông tin địa chỉ trang/tọa độ lưới cho dây dẫn từ sheet này sang sheet khác hàng loạt.", Category = "Khung tên & Trang" },
                 new() { Code = "GBV", Title = "Ghép bản vẽ (Outline Frame)", Description = "Ghép nhiều khung tên thành layout trình bày hoàn chỉnh.", Category = "Khung tên & Trang" },
                 new() { Code = "TBV", Title = "Tách bản vẽ", Description = "Tách từng khung tên thành file bản vẽ DWG riêng biệt theo số trang.", Category = "Khung tên & Trang" },
                 new() { Code = "INSGEN", Title = "Chèn ký hiệu gen số dây", Description = "Chèn block đánh số gen dây tuần tự và hỗ trợ bắt điểm thông minh.", Category = "Dây & Cầu đấu" },

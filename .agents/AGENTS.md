@@ -219,12 +219,13 @@ sequenceDiagram
 - **Direction 1 (Coil $\rightarrow$ Contacts):** Resolves coil position $\rightarrow$ Writes to `ADDRESS_COIL` on contacts.
 - **Direction 2 (Contacts $\rightarrow$ Relay Frame):** Resolves each contact's grid position $\rightarrow$ Writes to `ADDRESS_1..4` on `KHUNG 14 CHAN`.
 
-### 5.4. Sheet & Block Attribute Management with WPF UI (`DSTTKBT`, `DSTT`, `DOIATT`, `XOAYATT`)
+### 5.4. Sheet & Block Attribute Management with WPF UI (`DSTTKBT`, `DSTT`, `DOIATT`, `XOAYATT`, `SYNTF` / `DANDAY`)
 - Opens WPF [`AutoNumberingWindow`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/Views/AutoNumberingWindow.xaml) powered by [`AutoNumberingViewModel`](file:///f:/1.Project/1.C_shard/C_AutoCad/src/CadElectricalToolkit/UI/ViewModels/AutoNumberingViewModel.cs).
 - **Tab 1: STT khung tên (`DSTTKBT`):** Sets start number, prefix, suffix, style (`1`, `01`, `A`, `I`), sorting direction (4 orthogonal directions), and page mode (`Current/Total`, e.g., `01 /24` into tags `A00` & `TSHEET`).
 - **Tab 2: STT block attribute (`DSTT`):** Sets prefix (e.g. `DI.`), suffix, start number, step, target block name (e.g. `ten_chan_domino`), attribute TAG (e.g. `TEN_CHAN`), interactive CAD tag picker (`Chọn TAG`), and batch numbering or click-by-click numbering directly on CAD.
 - **Tab 3: Đổi Attribute hàng loạt (`DOIATT` / `DATTR`):** Select sample block from CAD to automatically load all attribute tags, supports Direct Value Assignment or Find & Replace (case sensitive option) across selected blocks or click-by-click.
 - **Tab 4: Xoay Attribute hàng loạt (`XOAYATT` / `XOAYTAG` / `ROTT`):** Select sample block from CAD or pick TAG, choose rotation angle (presets: 90° Dọc lên, 270° Dọc xuống, 0° Ngang, 180° Ngang lật, custom degree, or pick angle directly from CAD), and apply in batch via window selection or click-by-click. Also supports free Text/MText.
+- **Tab 5: Dây liên trang To-From (`SYNTF` / `DANDAY` / `SYNWIRE` / `DANDAYLIENSHEET`):** Tự động liên kết và đánh thông tin tham chiếu chéo giữa các sheet cho dây dẫn (mũi tên tín hiệu `Arrow - To - Block`, `Arrow - From - Block`). Tự động phát hiện cặp dây dựa trên tên dây (`WIRE_NAME`), tính toán địa chỉ trang/tọa độ lưới (`02` hoặc `02-5B` hoặc `02/07`), và ghi cập nhật hàng loạt vào `ADDRESS_TO` / `ADDRESS_FROM`. Hỗ trợ rẽ nhánh 1-nhiều trang, quét chọn vùng hoặc toàn bộ ModelSpace, nối thủ công 2 mũi tên, và cảnh báo dây chưa có đầu đối ứng.
 
 ### 5.5. Modern WPF & MVVM Architecture Pattern
 All plugin UI dialogs follow a clean, decoupled **MVVM (Model-View-ViewModel)** architecture:

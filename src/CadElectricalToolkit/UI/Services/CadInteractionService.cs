@@ -965,5 +965,430 @@ namespace CadElectricalToolkit.UI.Services
         }
 
         #endregion
+
+        #region ═══════════════ Wire Arrows Sync (Đồng bộ mũi tên / Dây liên trang) ═══════════════
+
+        public WireArrowSyncResult SyncWireArrowsAll(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null) return new WireArrowSyncResult();
+
+            WireArrowSyncResult result = new();
+
+            using (ed.StartUserInteraction(ownerWindow))
+            {
+                ed.WriteMessage("\n--- ĐANG ĐỒNG BỘ MŨI TÊN DÂY LIÊN TRANG (TOÀN BỘ BẢN VẼ) ---");
+
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    result = ProcessWireArrowSync(ed, db, tr, null, options);
+                });
+
+                ed.WriteMessage($"\n[DÂY LIÊN TRANG] Hoàn tất! Đã cập nhật {result.TotalUpdated} mũi tên ({result.LinkedGroupCount} cặp/nhóm tín hiệu).");
+                ed.Regen();
+            }
+
+            return result;
+        }
+
+        public WireArrowSyncResult SyncWireArrowsSelected(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null) return new WireArrowSyncResult();
+
+            WireArrowSyncResult result = new();
+
+            using (ed.StartUserInteraction(ownerWindow))
+            {
+                var pso = new PromptSelectionOptions
+                {
+                    MessageForAdding = "\nQuét chọn các mũi tên hoặc khung bản vẽ cần đồng bộ địa chỉ dây: "
+                };
+                var filter = SelectionHelper.CreateTypeFilter("INSERT");
+                var selRes = ed.GetSelection(pso, filter);
+                if (selRes.Status != PromptStatus.OK || selRes.Value == null || selRes.Value.Count == 0)
+                {
+                    ed.WriteMessage("\nChưa chọn đối tượng nào.");
+                    return result;
+                }
+
+                var selectedIds = selRes.Value.GetObjectIds().ToList();
+
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    result = ProcessWireArrowSync(ed, db, tr, selectedIds, options);
+                });
+
+                ed.WriteMessage($"\n[DÂY LIÊN TRANG] Hoàn tất! Đã cập nhật {result.TotalUpdated} mũi tên trong vùng chọn.");
+                ed.Regen();
+            }
+
+            return result;
+        }
+
+        public bool ConnectTwoArrowsManually(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options)
+        {
+            var ed = CadDatabaseHelper.ActiveEd;
+            if (ed == null) return false;
+
+            bool success = false;
+
+            using (ed.StartUserInteraction(ownerWindow))
+            {
+                var peo1 = new PromptEntityOptions("\nChọn Mũi tên nguồn A (xuất tín hiệu hoặc đầu thứ nhất): ");
+                peo1.SetRejectMessage("\nVui lòng chọn một Block Reference!");
+                var per1 = ed.GetEntity(peo1);
+                if (per1.Status != PromptStatus.OK) return false;
+
+                var peo2 = new PromptEntityOptions("\nChọn Mũi tên đích B (nhận tín hiệu hoặc đầu thứ hai): ");
+                peo2.SetRejectMessage("\nVui lòng chọn một Block Reference!");
+                var per2 = ed.GetEntity(peo2);
+                if (per2.Status != PromptStatus.OK) return false;
+
+                CadDatabaseHelper.RunTransaction((tr, db) =>
+                {
+                    if (tr.GetObject(per1.ObjectId, OpenMode.ForWrite) is BlockReference blk1 &&
+                        tr.GetObject(per2.ObjectId, OpenMode.ForWrite) is BlockReference blk2)
+                    {
+                        var frames = SheetFrameHelper.ScanAllSheetFrames(
+                            db, tr,
+                            SheetFrameHelper.DefaultTitleBlockNames,
+                            SheetFrameHelper.DefaultSheetNoTags);
+
+                        var frame1 = SheetFrameHelper.FindFrameContaining(frames, blk1.Position);
+                        var frame2 = SheetFrameHelper.FindFrameContaining(frames, blk2.Position);
+
+                        string sNo1 = frame1?.SheetNo ?? "1";
+                        string sNo2 = frame2?.SheetNo ?? "2";
+                        if (options.TwoDigits)
+                        {
+                            if (int.TryParse(sNo1, out int n1)) sNo1 = n1.ToString("D2");
+                            if (int.TryParse(sNo2, out int n2)) sNo2 = n2.ToString("D2");
+                        }
+                        string tot1 = !string.IsNullOrEmpty(frame1?.TotalSheets) ? frame1!.TotalSheets : frames.Count.ToString("D2");
+                        string tot2 = !string.IsNullOrEmpty(frame2?.TotalSheets) ? frame2!.TotalSheets : frames.Count.ToString("D2");
+
+                        int r1 = frame1 != null ? frame1.GetRowNumber(blk1.Position.Y, Core.ElectricalConfig.FrameRows) : 1;
+                        string c1 = frame1 != null ? frame1.GetColumnLetter(blk1.Position.X, Core.ElectricalConfig.FrameColumns, Core.ElectricalConfig.ColumnLetters) : "A";
+
+                        int r2 = frame2 != null ? frame2.GetRowNumber(blk2.Position.Y, Core.ElectricalConfig.FrameRows) : 1;
+                        string c2 = frame2 != null ? frame2.GetColumnLetter(blk2.Position.X, Core.ElectricalConfig.FrameColumns, Core.ElectricalConfig.ColumnLetters) : "A";
+
+                        string addr1 = FormatAddress(sNo1, tot1, r1, c1, options);
+                        string addr2 = FormatAddress(sNo2, tot2, r2, c2, options);
+
+                        // Đồng bộ tên dây nếu 1 bên có mà bên kia rỗng hoặc là Wire_name
+                        string? wire1 = blk1.GetAttributeValue(options.WireTag, tr) ?? blk1.GetAttributeValue(tr, Core.ElectricalConfig.TagArrowWireAliases);
+                        string? wire2 = blk2.GetAttributeValue(options.WireTag, tr) ?? blk2.GetAttributeValue(tr, Core.ElectricalConfig.TagArrowWireAliases);
+
+                        if (!string.IsNullOrWhiteSpace(wire1) && (string.IsNullOrWhiteSpace(wire2) || wire2 == "Wire_name"))
+                        {
+                            blk2.SetAttributeValue(options.WireTag, wire1 ?? "", tr);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(wire2) && (string.IsNullOrWhiteSpace(wire1) || wire1 == "Wire_name"))
+                        {
+                            blk1.SetAttributeValue(options.WireTag, wire2 ?? "", tr);
+                        }
+
+                        // Ghi địa chỉ chéo nhau
+                        WriteAddressToArrow(blk1, addr2, tr, options, isTo: true);
+                        WriteAddressToArrow(blk2, addr1, tr, options, isTo: false);
+
+                        success = true;
+                        ed.WriteMessage($"\n[NỐI THÀNH CÔNG] Mũi tên A (Trang {sNo1}) -> Địa chỉ đích '{addr2}' | Mũi tên B (Trang {sNo2}) -> Địa chỉ đích '{addr1}'");
+                    }
+                });
+
+                ed.Regen();
+            }
+
+            return success;
+        }
+
+        private class ArrowBlockItem
+        {
+            public BlockReference Block { get; set; } = null!;
+            public string WireName { get; set; } = "";
+            public string SheetNo { get; set; } = "";
+            public string Address { get; set; } = "";
+            public bool IsTo { get; set; }
+            public Point3d Position { get; set; }
+        }
+
+        private WireArrowSyncResult ProcessWireArrowSync(
+            Editor ed,
+            Database db,
+            Transaction tr,
+            List<ObjectId>? candidateBlockIds,
+            WireArrowSyncOptions options)
+        {
+            var result = new WireArrowSyncResult();
+
+            // 1. Quét danh sách khung tên trong bản vẽ
+            var frames = SheetFrameHelper.ScanAllSheetFrames(
+                db, tr,
+                SheetFrameHelper.DefaultTitleBlockNames,
+                SheetFrameHelper.DefaultSheetNoTags);
+
+            if (frames.Count == 0)
+            {
+                ed.WriteMessage("\n[CẢNH BÁO] Không tìm thấy khung tên bản vẽ nào (Frame-a4, Frame-a3, hoặc có TAG A00). Tự động dùng địa chỉ mặc định.");
+            }
+
+            // 2. Lấy danh sách block cần kiểm tra
+            var blockIds = candidateBlockIds ?? SelectionHelper.GetAllEntitiesOfType<BlockReference>(db, tr);
+            var arrowItems = new List<ArrowBlockItem>();
+
+            foreach (var id in blockIds)
+            {
+                if (tr.GetObject(id, OpenMode.ForWrite) is BlockReference blkRef)
+                {
+                    string blkName = blkRef.GetEffectiveBlockName(tr);
+
+                    // Nhận diện block mũi tên
+                    bool isArrow = false;
+                    if (!string.IsNullOrWhiteSpace(options.TargetBlockName))
+                    {
+                        var allowedNames = options.TargetBlockName
+                            .Split(new[] { ',', ';', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .ToList();
+
+                        isArrow = allowedNames.Any(name => string.Equals(blkName, name, StringComparison.OrdinalIgnoreCase));
+
+                        // Nếu người dùng chọn Arrow - To - Block, tự động hỗ trợ luôn cả Arrow - From - Block đối ứng
+                        if (!isArrow)
+                        {
+                            foreach (var name in allowedNames)
+                            {
+                                if (name.IndexOf("TO", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    name.IndexOf("FROM", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    name.IndexOf("ARROW", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    string alt1 = name.Replace("To", "From").Replace("TO", "FROM");
+                                    string alt2 = name.Replace("From", "To").Replace("FROM", "TO");
+                                    if (string.Equals(blkName, alt1, StringComparison.OrdinalIgnoreCase) ||
+                                        string.Equals(blkName, alt2, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        isArrow = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        bool hasArrowName = blkName.IndexOf("ARROW", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                            blkName.IndexOf("TO", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                            blkName.IndexOf("FROM", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                        var atts = blkRef.GetAttributes(tr);
+                        bool hasWireAttr = atts.ContainsKey(options.WireTag) ||
+                                           Core.ElectricalConfig.TagArrowWireAliases.Any(a => atts.ContainsKey(a));
+                        bool hasAddrAttr = atts.ContainsKey(options.AddressToTag) ||
+                                           atts.ContainsKey(options.AddressFromTag) ||
+                                           Core.ElectricalConfig.TagArrowAddressAliases.Any(a => atts.ContainsKey(a));
+
+                        isArrow = hasArrowName || (hasWireAttr && hasAddrAttr);
+                    }
+
+                    if (!isArrow) continue;
+
+                    // Trích xuất Tên dây
+                    string? wireName = blkRef.GetAttributeValue(options.WireTag, tr);
+                    if (string.IsNullOrWhiteSpace(wireName))
+                    {
+                        wireName = blkRef.GetAttributeValue(tr, Core.ElectricalConfig.TagArrowWireAliases);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(wireName)) continue;
+
+                    // Xác định khung tên chứa mũi tên
+                    var frame = SheetFrameHelper.FindFrameContaining(frames, blkRef.Position);
+                    string sheetNo = frame?.SheetNo ?? "1";
+                    if (options.TwoDigits && int.TryParse(sheetNo, out int sNum))
+                    {
+                        sheetNo = sNum.ToString("D2");
+                    }
+                    string totalSheets = !string.IsNullOrEmpty(frame?.TotalSheets) ? frame!.TotalSheets : frames.Count.ToString("D2");
+
+                    int row = frame != null ? frame.GetRowNumber(blkRef.Position.Y, Core.ElectricalConfig.FrameRows) : 1;
+                    string col = frame != null ? frame.GetColumnLetter(blkRef.Position.X, Core.ElectricalConfig.FrameColumns, Core.ElectricalConfig.ColumnLetters) : "A";
+
+                    string formattedAddr = FormatAddress(sheetNo, totalSheets, row, col, options);
+
+                    // Phân loại To vs From
+                    bool isTo = blkName.IndexOf("TO", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                blkName.IndexOf("OUT", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                blkName.IndexOf("SRC", StringComparison.OrdinalIgnoreCase) >= 0;
+                    bool isFrom = blkName.IndexOf("FROM", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                  blkName.IndexOf("IN", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                  blkName.IndexOf("DEST", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                    if (!isTo && !isFrom)
+                    {
+                        var atts = blkRef.GetAttributes(tr);
+                        if (atts.ContainsKey(options.AddressToTag) && !atts.ContainsKey(options.AddressFromTag))
+                            isTo = true;
+                        else if (atts.ContainsKey(options.AddressFromTag))
+                            isFrom = false;
+                        else
+                            isTo = true;
+                    }
+
+                    arrowItems.Add(new ArrowBlockItem
+                    {
+                        Block = blkRef,
+                        WireName = wireName!.Trim(),
+                        SheetNo = sheetNo,
+                        Address = formattedAddr,
+                        IsTo = isTo,
+                        Position = blkRef.Position
+                    });
+                }
+            }
+
+            result.TotalArrowsFound = arrowItems.Count;
+            ed.WriteMessage($"\n[DÂY LIÊN TRANG] Quét thấy {arrowItems.Count} mũi tên trong phạm vi.");
+
+            if (arrowItems.Count == 0)
+            {
+                ed.WriteMessage($"\n[CHÚ Ý] Không tìm thấy block mũi tên nào phù hợp với Tên Block: '{options.TargetBlockName}' và TAG Tên dây: '{options.WireTag}'.");
+                return result;
+            }
+
+            // 3. Nhóm các mũi tên theo tên dây (hỗ trợ so khớp theo tên gốc nếu bật MatchBaseSignalOnly)
+            var groups = arrowItems.GroupBy(x =>
+            {
+                if (options.MatchBaseSignalOnly && x.WireName.Contains(options.BaseSignalSeparator))
+                {
+                    var parts = x.WireName.Split(new[] { options.BaseSignalSeparator }, StringSplitOptions.None);
+                    return parts[0].Trim();
+                }
+                return x.WireName.Trim();
+            }, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var grp in groups)
+            {
+                string wire = grp.Key;
+                var items = grp.ToList();
+
+                if (items.Count == 1)
+                {
+                    result.UnmatchedSignals.Add($"Dây '{items[0].WireName}' (tại trang {items[0].SheetNo})");
+                    continue;
+                }
+
+                if (items.Count == 2)
+                {
+                    var a = items[0];
+                    var b = items[1];
+
+                    bool ok1 = WriteAddressToArrow(a.Block, b.Address, tr, options, a.IsTo);
+                    bool ok2 = options.UpdateBothWays ? WriteAddressToArrow(b.Block, a.Address, tr, options, b.IsTo) : false;
+
+                    if (ok1) result.TotalUpdated++;
+                    if (ok2) result.TotalUpdated++;
+                    result.LinkedGroupCount++;
+                    result.Details.Add($"Dây '{wire}' ({a.WireName} ⟷ {b.WireName}): Trang {a.SheetNo} ({a.Address}) ⟷ Trang {b.SheetNo} ({b.Address})");
+                }
+                else
+                {
+                    // Rẽ nhánh (> 2 mũi tên cho cùng 1 dây)
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        var current = items[i];
+                        var others = items.Where((x, idx) => idx != i).ToList();
+
+                        string combined;
+                        if (options.IncludeMultipleSheets)
+                        {
+                            var distinctAddrs = others.Select(x => x.Address).Distinct();
+                            combined = string.Join(", ", distinctAddrs);
+                        }
+                        else
+                        {
+                            combined = others[0].Address;
+                        }
+
+                        if (WriteAddressToArrow(current.Block, combined, tr, options, current.IsTo))
+                        {
+                            result.TotalUpdated++;
+                        }
+                    }
+                    result.LinkedGroupCount++;
+                    result.Details.Add($"Dây rẽ nhánh '{wire}': {items.Count} mũi tên liên kết giữa các trang: {string.Join(", ", items.Select(x => x.SheetNo).Distinct())}");
+                }
+            }
+
+            return result;
+        }
+
+        private static bool WriteAddressToArrow(
+            BlockReference blk,
+            string address,
+            Transaction tr,
+            WireArrowSyncOptions options,
+            bool isTo)
+        {
+            var candidateTags = isTo
+                ? new[] { options.AddressToTag, "ADDRESS_TO", "TO_PAGE", "PAGE_REF", "ADDRESS", "REF", "DEST_PAGE", "PAGE", options.AddressFromTag, "ADDRESS_FROM", "FROM_PAGE" }
+                : new[] { options.AddressFromTag, "ADDRESS_FROM", "FROM_PAGE", "PAGE_REF", "ADDRESS", "REF", "DEST_PAGE", "PAGE", options.AddressToTag, "ADDRESS_TO", "TO_PAGE" };
+
+            foreach (ObjectId attId in blk.AttributeCollection)
+            {
+                if (tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef)
+                {
+                    if (candidateTags.Any(tag => string.Equals(tag, attRef.Tag, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (!attRef.IsWriteEnabled) attRef.UpgradeOpen();
+                        attRef.TextString = address;
+                        return true;
+                    }
+                }
+            }
+
+            // Fallback: nếu có attribute nào đang chứa text "PAGE" hoặc "---", cập nhật nó
+            foreach (ObjectId attId in blk.AttributeCollection)
+            {
+                if (tr.GetObject(attId, OpenMode.ForRead) is AttributeReference attRef)
+                {
+                    string txt = attRef.TextString?.Trim() ?? "";
+                    if (string.Equals(txt, "PAGE", StringComparison.OrdinalIgnoreCase) || txt == "---" || txt == "?")
+                    {
+                        if (!attRef.IsWriteEnabled) attRef.UpgradeOpen();
+                        attRef.TextString = address;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static string FormatAddress(
+            string sheetNo,
+            string totalSheets,
+            int row,
+            string col,
+            WireArrowSyncOptions options)
+        {
+            return options.FormatModeIndex switch
+            {
+                1 => $"{options.Prefix}{sheetNo}{options.GridSeparator}{row}{col}{options.Suffix}",
+                2 => $"{options.Prefix}{sheetNo}/{totalSheets}{options.Suffix}",
+                3 => $"{options.Prefix}{sheetNo}{options.GridSeparator}{row}{col}{options.Suffix}",
+                _ => $"{options.Prefix}{sheetNo}{options.Suffix}",
+            };
+        }
+
+        #endregion
     }
 }

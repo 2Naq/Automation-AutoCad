@@ -157,5 +157,70 @@ namespace CadElectricalToolkit.UI.Services
             bool isRelative,
             bool keepCenter = true,
             double offsetDistance = 0.0);
+
+        /// <summary>
+        /// Đồng bộ địa chỉ dây dẫn liên trang trên toàn bộ bản vẽ ModelSpace
+        /// </summary>
+        WireArrowSyncResult SyncWireArrowsAll(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options);
+
+        /// <summary>
+        /// Đồng bộ địa chỉ dây dẫn liên trang theo vùng quét chọn trên CAD
+        /// </summary>
+        WireArrowSyncResult SyncWireArrowsSelected(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options);
+
+        /// <summary>
+        /// Nối và gán địa chỉ trực tiếp giữa 2 mũi tên (Pick mũi tên A -> Pick mũi tên B)
+        /// </summary>
+        bool ConnectTwoArrowsManually(
+            System.Windows.Window ownerWindow,
+            WireArrowSyncOptions options);
+    }
+
+    /// <summary>
+    /// Các tùy chọn đồng bộ địa chỉ dây dẫn / mũi tên To-From liên trang
+    /// </summary>
+    public class WireArrowSyncOptions
+    {
+        public string TargetBlockName { get; set; } = "Arrow - To - Block";
+        public string WireTag { get; set; } = "WIRE_NAME";
+        public string AddressToTag { get; set; } = "ADDRESS_TO";
+        public string AddressFromTag { get; set; } = "ADDRESS_FROM";
+
+        /// <summary>
+        /// 0: Chỉ số trang (ví dụ "02")
+        /// 1: Trang - Tọa độ ô lưới (ví dụ "02-5B")
+        /// 2: Trang / Tổng trang (ví dụ "02/07")
+        /// 3: Tùy biến (Prefix + Trang + Dấu phân cách + Ô lưới)
+        /// </summary>
+        public int FormatModeIndex { get; set; } = 0;
+
+        public string Prefix { get; set; } = "";
+        public string Suffix { get; set; } = "";
+        public string GridSeparator { get; set; } = "-";
+        public bool TwoDigits { get; set; } = true;
+        public bool IncludeMultipleSheets { get; set; } = true;
+        public bool UpdateBothWays { get; set; } = true;
+
+        /// <summary>
+        /// Khớp theo tên gốc trước dấu ngăn cách (ví dụ "DI.08-RB1" và "DI.08-RB2" cùng có gốc là "DI.08")
+        /// </summary>
+        public bool MatchBaseSignalOnly { get; set; } = false;
+        public string BaseSignalSeparator { get; set; } = "-";
+    }
+
+    /// <summary>
+    /// Kết quả đồng bộ địa chỉ dây liên trang
+    /// </summary>
+    public class WireArrowSyncResult
+    {
+        public int TotalArrowsFound { get; set; }
+        public int TotalUpdated { get; set; }
+        public int LinkedGroupCount { get; set; }
+        public List<string> UnmatchedSignals { get; set; } = new();
+        public List<string> Details { get; set; } = new();
     }
 }

@@ -219,6 +219,51 @@ namespace CadElectricalToolkit.Core
         public static string TagPlcDescription = "DESC";
 
         #endregion
+
+        #region 7. Cấu hình Mũi tên tín hiệu TO-FROM liên trang (Wire Cross-Reference Arrows)
+
+        /// <summary>
+        /// Danh sách tên Block mũi tên tín hiệu TO-FROM mặc định
+        /// (Ví dụ: "Arrow - To - Block", "Arrow - From - Block", "ARROW_TO", "ARROW_FROM")
+        /// </summary>
+        public static string[] BlockArrowNames = new[]
+        {
+            "Arrow - To - Block", "Arrow - From - Block", "Arrow-To-Block", "Arrow-From-Block",
+            "ARROW_TO", "ARROW_FROM", "ARROW TO", "ARROW FROM", "SIG_TO", "SIG_FROM"
+        };
+
+        /// <summary>
+        /// Tag tên dây / tín hiệu trên mũi tên (Trong ảnh bản vẽ: "WIRE_NAME")
+        /// </summary>
+        public static string TagArrowWire = "WIRE_NAME";
+
+        /// <summary>
+        /// Danh sách các Tag tên dây dự phòng (ưu tiên tìm theo thứ tự)
+        /// </summary>
+        public static string[] TagArrowWireAliases = new[]
+        {
+            "WIRE_NAME", "SIG_NAME", "SIGNAL", "WIRE_NO", "WIRE", "TAG", "NAME"
+        };
+
+        /// <summary>
+        /// Tag địa chỉ trang đích trên mũi tên xuất đi (TO) (Trong ảnh: "ADDRESS_TO")
+        /// </summary>
+        public static string TagArrowAddressTo = "ADDRESS_TO";
+
+        /// <summary>
+        /// Tag địa chỉ trang nguồn trên mũi tên nhận về (FROM) (Trong ảnh: "ADDRESS_FROM" hoặc "ADDRESS_TO")
+        /// </summary>
+        public static string TagArrowAddressFrom = "ADDRESS_FROM";
+
+        /// <summary>
+        /// Danh sách các Tag địa chỉ tham chiếu liên trang dự phòng
+        /// </summary>
+        public static string[] TagArrowAddressAliases = new[]
+        {
+            "ADDRESS_TO", "ADDRESS_FROM", "TO_PAGE", "FROM_PAGE", "PAGE_REF", "REF", "DEST_PAGE", "PAGE"
+        };
+
+        #endregion
     }
 
     /// <summary>

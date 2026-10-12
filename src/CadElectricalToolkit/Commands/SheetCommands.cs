@@ -9,6 +9,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using CadElectricalToolkit.CadAccess;
 using CadElectricalToolkit.Core;
+using CadElectricalToolkit.UI;
 
 namespace CadElectricalToolkit.Commands
 {
@@ -182,104 +183,40 @@ namespace CadElectricalToolkit.Commands
         }
 
         /// <summary>
-        /// SYNTF : Cập nhật địa chỉ mũi tên tín hiệu TO-FROM liên trang
+        /// SYNTF / DANDAY / SYNWIRE / DANDAYLIENSHEET : Đánh thông tin & đồng bộ địa chỉ dây dẫn TO-FROM liên trang (Mở giao diện WPF Tab 5)
         /// </summary>
         [CommandMethod("SYNTF")]
+        [CommandMethod("DANDAY")]
+        [CommandMethod("SYNWIRE")]
+        [CommandMethod("DANDAYLIENSHEET")]
         public void SyncToFromArrows()
         {
+            var window = new UI.Views.AutoNumberingWindow(tabIndex: 4);
+            window.ShowModal();
+        }
+
+        /// <summary>
+        /// -SYNTF : Phiên bản dòng lệnh không mở giao diện (Headless CLI Batch Sync)
+        /// </summary>
+        [CommandMethod("-SYNTF")]
+        public void SyncToFromArrowsCommandLine()
+        {
             var ed = CadDatabaseHelper.ActiveEd;
-            ed.WriteMessage("\n--- CAP NHAT DIA CHI MUI TEN TO-FROM (SYNTF) ---");
+            ed.WriteMessage("\n--- ĐỒNG BỘ ĐỊA CHỈ DÂY LIÊN TRANG HÀNG LOẠT (-SYNTF) ---");
 
-            var arrowList = new List<ArrowItem>();
+            var service = new UI.Services.CadInteractionService();
+            var options = new UI.Services.WireArrowSyncOptions();
+            var res = service.SyncWireArrowsAll(null!, options);
 
-            CadDatabaseHelper.RunTransaction((tr, db) =>
+            ed.WriteMessage($"\n[SYNTF] Hoàn tất! Đã cập nhật {res.TotalUpdated} mũi tên ({res.LinkedGroupCount} cặp tín hiệu).");
+            if (res.UnmatchedSignals.Count > 0)
             {
-                // 1. Quet tat ca khung ten de lay toa do pham vi tung trang
-                var sheets = new List<(string SheetNo, Extents3d Box)>();
-                var allBlocks = SelectionHelper.GetAllEntitiesOfType<BlockReference>(db, tr);
-
-                foreach (var id in allBlocks)
+                ed.WriteMessage($"\n[CẢNH BÁO] Có {res.UnmatchedSignals.Count} dây chưa có đầu đối ứng:");
+                foreach (var s in res.UnmatchedSignals)
                 {
-                    if (tr.GetObject(id, OpenMode.ForRead) is BlockReference blkRef)
-                    {
-                        var attrs = blkRef.GetAttributes(tr);
-                        if (attrs.ContainsKey(ElectricalConfig.TagSheetNumber))
-                        {
-                            string sNo = attrs[ElectricalConfig.TagSheetNumber];
-                            try
-                            {
-                                sheets.Add((sNo, blkRef.GeometricExtents));
-                            }
-                            catch { }
-                        }
-                    }
+                    ed.WriteMessage($"\n   - {s}");
                 }
-
-                // 2. Quet cac block mui ten tin hieu (Block chua tag SIG_NAME hoac TO_PAGE / FROM_PAGE)
-                foreach (var id in allBlocks)
-                {
-                    if (tr.GetObject(id, OpenMode.ForWrite) is BlockReference blkRef)
-                    {
-                        string blkName = blkRef.GetEffectiveBlockName(tr).ToUpper();
-                        var attrs = blkRef.GetAttributes(tr);
-
-                        bool isArrow = blkName.Contains("TO") || blkName.Contains("FROM") || blkName.Contains("ARROW") || attrs.ContainsKey("SIG_NAME");
-                        if (isArrow)
-                        {
-                            string sigName = blkRef.GetAttributeValue(tr, "SIG_NAME", "SIGNAL", "TAG", "NAME") ?? "";
-                            if (!string.IsNullOrWhiteSpace(sigName))
-                            {
-                                // Xac dinh trang ma mui ten nay dang nam trong
-                                string pageNo = "?";
-                                foreach (var sheet in sheets)
-                                {
-                                    if (blkRef.Position.X >= sheet.Box.MinPoint.X && blkRef.Position.X <= sheet.Box.MaxPoint.X &&
-                                        blkRef.Position.Y >= sheet.Box.MinPoint.Y && blkRef.Position.Y <= sheet.Box.MaxPoint.Y)
-                                    {
-                                        pageNo = sheet.SheetNo;
-                                        break;
-                                    }
-                                }
-
-                                arrowList.Add(new ArrowItem
-                                {
-                                    Block = blkRef,
-                                    SignalName = sigName.Trim(),
-                                    CurrentPage = pageNo,
-                                    IsTo = blkName.Contains("TO")
-                                });
-                            }
-                        }
-                    }
-                }
-
-                // 3. Bat cap cac mui ten co cung SignalName va ghi so trang cheo nhau
-                int linkedCount = 0;
-                var groups = arrowList.GroupBy(x => x.SignalName, StringComparer.OrdinalIgnoreCase);
-
-                foreach (var grp in groups)
-                {
-                    var items = grp.ToList();
-                    if (items.Count >= 2)
-                    {
-                        // Mui ten nguon va mui ten dich
-                        var source = items.FirstOrDefault(x => x.IsTo) ?? items[0];
-                        var target = items.FirstOrDefault(x => !x.IsTo) ?? items[1];
-
-                        // Ghi so trang dich vao nguon
-                        source.Block.SetAttributeValue("TO_PAGE", target.CurrentPage, tr);
-                        source.Block.SetAttributeValue("PAGE_REF", target.CurrentPage, tr);
-
-                        // Ghi so trang nguon vao dich
-                        target.Block.SetAttributeValue("FROM_PAGE", source.CurrentPage, tr);
-                        target.Block.SetAttributeValue("PAGE_REF", source.CurrentPage, tr);
-
-                        linkedCount += 2;
-                    }
-                }
-
-                ed.WriteMessage($"\n[SYNTF] Da lien ket va cap nhat dia chi trang cho {linkedCount} mui ten tin hieu ({groups.Count()} cap tin hieu)!");
-            });
+            }
         }
 
         /// <summary>

@@ -41,6 +41,13 @@ namespace CadElectricalToolkit.UiRunner
             win.ShowDialog();
         }
 
+        private void BtnOpenWireArrows_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new AutoNumberingWindow(tabIndex: 4);
+            win.Owner = this;
+            win.ShowDialog();
+        }
+
         private void BtnOpenToolInfo_Click(object sender, RoutedEventArgs e)
         {
             var win = new ToolInfoWindow();
