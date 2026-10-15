@@ -12,6 +12,8 @@ namespace CadElectricalToolkit
     {
         public void Initialize()
         {
+            EncodingHelper.EnsureCodePagesRegistered();
+
             CadDatabaseHelper.WriteMessage(
                 "\n=======================================================" +
                 "\n [CadElectricalToolkit] Da khoi tao thanh cong!" +

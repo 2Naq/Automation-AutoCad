@@ -553,6 +553,7 @@ namespace CadElectricalToolkit.CadAccess
                 result.ErrorMessage = "Không có bản vẽ nào được chọn để in.";
                 return result;
             }
+            EncodingHelper.EnsureCodePagesRegistered();
 
             string tempDir = Path.Combine(Path.GetTempPath(), "CadElectrical_Plot_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
@@ -938,6 +939,7 @@ namespace CadElectricalToolkit.CadAccess
             List<WireArrowPdfLink> links,
             bool enableLinks)
         {
+            EncodingHelper.EnsureCodePagesRegistered();
             int linksCreatedCount = 0;
 
             using (PdfDocument outputDoc = new PdfDocument())
